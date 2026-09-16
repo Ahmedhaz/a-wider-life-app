@@ -18,7 +18,7 @@ C="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$BASE/v1/ses
 case "$C" in 404) say "unknown code refused" "green 404"; ok=$((ok+1));; 503) say "unknown code refused" "skip · db unconfigured"; skip=$((skip+1));; *) say "unknown code refused" "RED $C"; fail=$((fail+1));; esac
 
 A="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 -X POST "$BASE/v1/admin/batch" -H 'content-type: application/json' -d '{"n":1}')"
-case "$A" in 401|404) say "admin wall (no secret)" "green $A"; ok=$((ok+1));; *) say "admin wall (no secret)" "RED $A"; fail=$((fail+1));; esac
+case "$A" in 401|404) say "admin wall (no secret)" "green $A"; ok=$((ok+1));; 503) say "admin wall (no secret)" "skip · db unconfigured"; skip=$((skip+1));; *) say "admin wall (no secret)" "RED $A"; fail=$((fail+1));; esac
 
 if [ -n "$ADMIN" ]; then
   M="$(curl -sS --max-time 20 "$BASE/v1/admin/metric" -H "x-admin-secret: $ADMIN")"

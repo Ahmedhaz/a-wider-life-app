@@ -25,9 +25,20 @@ BASE_URL="${AWL_BASE_URL:-$(printf '%s\n' "$OUT" | grep -o 'https://[a-z0-9.-]*w
 printf '%s\n' "$BASE_URL" > "$ROOT/worker/.deployed-url"
 
 echo "== close by result · $BASE_URL"
-sleep 3
-LIVE="$(curl -sS --max-time 15 "$BASE_URL/__build" || true)"
-if [ "$LIVE" != "$MARK" ]; then echo "LIVE MARKER '$LIVE' != '$MARK' · deploy NOT closed"; exit 2; fi
-curl -sS --max-time 15 "$BASE_URL/v1/health" | tee /dev/stderr | grep -q '"ok":true' || { echo; echo "health failed"; exit 3; }
-echo
+# A fresh workers.dev route can answer "error code: 1042" for up to a minute after the first deploy. Wait for it, once.
+LIVE=""
+for i in $(seq 1 20); do
+  LIVE="$(curl -sS --max-time 15 "$BASE_URL/__build" || true)"
+  [ "$LIVE" = "$MARK" ] && break
+  sleep 3
+done
+if [ "$LIVE" != "$MARK" ]; then echo "LIVE MARKER '$LIVE' != '$MARK' after 60s · deploy NOT closed"; exit 2; fi
+HEALTH=""
+for i in $(seq 1 10); do
+  HEALTH="$(curl -sS --max-time 15 "$BASE_URL/v1/health" || true)"
+  printf '%s\n' "$HEALTH" | grep -q '"ok":true' && break
+  sleep 3
+done
+printf '%s\n' "$HEALTH"
+printf '%s\n' "$HEALTH" | grep -q '"ok":true' || { echo "health failed after 30s"; exit 3; }
 echo "closed · $MARK live at $BASE_URL"
