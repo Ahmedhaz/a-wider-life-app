@@ -93,8 +93,10 @@ export class Db {
   async ping(): Promise<string | null> {
     try { await this.select("flags", "select=id&limit=1"); return null; }
     catch (e) {
-      if (e instanceof DbError) return `http ${e.status}: ${e.message.slice(0, 160)}`;
-      return `fetch: ${String((e as Error)?.message ?? e).slice(0, 160)}`;
+      // Never echo the configured values back: a secret pasted into the wrong slot must not surface here.
+      const scrub = (s: string) => s.split(this.key).join("<key>").split(this.url).join("<url>");
+      if (e instanceof DbError) return scrub(`http ${e.status}: ${e.message.slice(0, 160)}`);
+      return scrub(`fetch: ${String((e as Error)?.message ?? e).slice(0, 160)}`);
     }
   }
 }
