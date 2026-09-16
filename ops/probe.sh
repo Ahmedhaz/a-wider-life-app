@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Honest-ceiling probes against a live base URL. Green only with evidence; a missing secret is a skip, not a pass.
 set -uo pipefail
-BASE="${AWL_BASE_URL:-https://a-wider-life.ahmed-haz.workers.dev}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BASE="${AWL_BASE_URL:-$(cat "$ROOT/worker/.deployed-url" 2>/dev/null || true)}"
+[ -n "$BASE" ] || { echo "no base URL: run ops/ship.sh once, or set AWL_BASE_URL"; exit 4; }
 ADMIN="${AWL_ADMIN_SECRET:-}"
 ok=0; skip=0; fail=0
 say(){ printf '%-34s %s\n' "$1" "$2"; }

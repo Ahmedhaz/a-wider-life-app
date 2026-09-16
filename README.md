@@ -22,7 +22,24 @@ cd worker && npm install && npm test && npm run typecheck
 node content/validate.mjs
 ```
 
-Secrets on the Worker: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `ADMIN_SECRET`. Never in this repo.
+## Ship
+
+```
+cd worker && npx wrangler login          # once per machine, opens the browser
+cd .. && ops/ship.sh                     # tests, bundle, deploy, then closes by the live /__build marker
+ops/probe.sh                             # honest-ceiling probes against the URL ship.sh recorded
+```
+
+Secrets on the Worker, set once per environment and never in this repo:
+
+```
+cd worker
+npx wrangler secret put ADMIN_SECRET          # any long random string, e.g. from `openssl rand -hex 24`
+npx wrangler secret put SUPABASE_URL          # https://<ref>.supabase.co
+npx wrangler secret put SUPABASE_SERVICE_KEY  # the service_role key, never the anon key
+```
+
+Until the two Supabase secrets exist, `/v1/health` answers `"db":"unconfigured"` and every `/v1/*` route answers 503.
 
 ## Rules that are code, not prose
 
