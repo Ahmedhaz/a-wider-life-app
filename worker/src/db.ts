@@ -8,6 +8,8 @@ export interface Env {
   BUILD?: string;
   ADMIN_ENABLED?: string;
   DEV_OPEN_ALL_COUNTRIES?: string;
+  /** Static assets binding (the web client in ../web), present once wrangler.toml has [assets]. */
+  ASSETS?: { fetch(req: Request): Promise<Response> };
 }
 
 export class DbError extends Error {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F4ED">
 <title>حياة أوسع</title>
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="/manifest.webmanifest">
 <style>
 :root{--bg:#FBF9F4;--paper:#fff;--ink:#1C2B2E;--muted:#5B6E71;--teal:#0E4A54;--gold:#C9A961;--sand:#E7DDCB;--line:#E3DAC7;--soft:#F1ECDF;--pen:#1B3A5C;--shade:#EAE3D3}
 *{box-sizing:border-box}
@@ -219,7 +219,7 @@ function bind() {
 }
 function go(s) { S.err = null; ({ day, week, notebook, settings })[s](); }
 S.token ? go("day") : door();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 </script>
 </body>
 </html>

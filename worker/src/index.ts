@@ -450,6 +450,10 @@ async function route(req: Request, env: Env): Promise<Response> {
   const p = url.pathname.replace(/\/$/, "") || "/";
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (p === "/__build") return new Response(env.BUILD ?? "dev", { headers: { "content-type": "text/plain", ...CORS } });
+  // The printed QR is https://<host>/k/<code>. No asset lives there, so hand the client shell back and let it read the code.
+  if (req.method === "GET" && /^\/k\/[A-Za-z0-9-]{1,40}$/.test(p) && env.ASSETS) {
+    return env.ASSETS.fetch(new Request(new URL("/index.html", req.url).toString(), { headers: req.headers }));
+  }
 
   const db = Db.from(env);
   if (p === "/v1/health") {

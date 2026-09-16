@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = []
 
+[assets]
+directory = "../web"      # the client shell: index.html, manifest, service worker
+binding = "ASSETS"
+
 [triggers]
 crons = ["0 * * * *"]   # the day-close job, hourly, acting on readers whose local midnight just passed
 

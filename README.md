@@ -41,6 +41,17 @@ npx wrangler secret put SUPABASE_SERVICE_KEY  # the service_role key, never the 
 
 Until the two Supabase secrets exist, `/v1/health` answers `"db":"unconfigured"` and every `/v1/*` route answers 503.
 
+The Worker also serves the client: `/` and `/k/<code>` (the printed QR) return `web/index.html` from the assets binding.
+
+Admin calls, from a machine that holds `ADMIN_SECRET` (asked for once, never written to disk):
+
+```
+ops/admin.sh content content/ar/self/01.json   # upsert one content unit
+ops/admin.sh batch 5 ar test-1                 # mint five print codes, CSV lands in ops/out/ (ignored by git)
+ops/admin.sh metric                            # drops that returned within two acting days
+ops/admin.sh close                             # run the day-close job now
+```
+
 ## Rules that are code, not prose
 
 - Two answers only, Done and Smaller. An unanswered acting day is `empty` and steps the dose down silently.
