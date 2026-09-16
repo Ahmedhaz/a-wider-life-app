@@ -18,8 +18,29 @@ export class Db {
   constructor(private url: string, private key: string) {}
 
   static from(env: Env): Db | null {
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_KEY) return null;
-    return new Db(env.SUPABASE_URL.replace(/\/$/, ""), env.SUPABASE_SERVICE_KEY);
+    const url = (env.SUPABASE_URL ?? "").trim().replace(/\/$/, "");
+    const key = (env.SUPABASE_SERVICE_KEY ?? "").trim();
+    if (!url || !key) return null;
+    return new Db(url, key);
+  }
+
+  /**
+   * What health may say about the connection without leaking a secret: the host the Worker talks to,
+   * and the shape of the key (a legacy JWT and its role claim, a new sb_secret key, or something else).
+   */
+  describe(): { host: string; key: string } {
+    let host = "invalid-url";
+    try { host = new URL(this.url).host; } catch { /* keep the marker */ }
+    let key = "unknown";
+    if (this.key.startsWith("sb_secret_")) key = "sb_secret";
+    else if (this.key.startsWith("sb_publishable_")) key = "sb_publishable";
+    else if (this.key.startsWith("eyJ")) {
+      try {
+        const payload = JSON.parse(atob(this.key.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        key = `jwt:${payload.role ?? "no-role"}`;
+      } catch { key = "jwt:unreadable"; }
+    }
+    return { host, key };
   }
 
   private async call<T>(method: string, table: string, query: string, body?: unknown, prefer?: string): Promise<T> {
@@ -68,9 +89,13 @@ export class Db {
 
   del(table: string, query: string): Promise<void> { return this.call<void>("DELETE", table, query, undefined, "return=minimal"); }
 
-  /** A cheap liveness probe: one row from a tiny table. */
-  async ping(): Promise<boolean> {
-    try { await this.select("flags", "select=id&limit=1"); return true; } catch { return false; }
+  /** A cheap liveness probe: one row from a tiny table. Returns null when it works, else a short reason. */
+  async ping(): Promise<string | null> {
+    try { await this.select("flags", "select=id&limit=1"); return null; }
+    catch (e) {
+      if (e instanceof DbError) return `http ${e.status}: ${e.message.slice(0, 160)}`;
+      return `fetch: ${String((e as Error)?.message ?? e).slice(0, 160)}`;
+    }
   }
 }
 

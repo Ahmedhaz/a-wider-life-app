@@ -453,8 +453,11 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   const db = Db.from(env);
   if (p === "/v1/health") {
-    const dbState = db ? ((await db.ping()) ? "ok" : "error") : "unconfigured";
-    return json({ ok: true, build: env.BUILD ?? "dev", db: dbState, time: new Date().toISOString() });
+    const base = { ok: true, build: env.BUILD ?? "dev", time: new Date().toISOString() };
+    if (!db) return json({ ...base, db: "unconfigured" });
+    const reason = await db.ping();
+    // On failure, say enough to fix it (which host, what shape of key, what came back) and nothing that is a secret.
+    return json(reason === null ? { ...base, db: "ok" } : { ...base, db: "error", db_reason: reason, db_target: db.describe() });
   }
   if (!db) throw new HttpError(503, "db_unconfigured");
 
