@@ -1,0 +1,14 @@
+name = "a-wider-life"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = []
+
+[triggers]
+crons = ["0 * * * *"]   # the day-close job, hourly, acting on readers whose local midnight just passed
+
+[vars]
+BUILD = "dev"
+ADMIN_ENABLED = "true"
+
+# Secrets, set with `wrangler secret put` or the ship script, never here:
+# SUPABASE_URL · SUPABASE_SERVICE_KEY · ADMIN_SECRET

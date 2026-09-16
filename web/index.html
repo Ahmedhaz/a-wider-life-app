@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F4ED">
+<title>حياة أوسع</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#FBF9F4;--paper:#fff;--ink:#1C2B2E;--muted:#5B6E71;--teal:#0E4A54;--gold:#C9A961;--sand:#E7DDCB;--line:#E3DAC7;--soft:#F1ECDF;--pen:#1B3A5C;--shade:#EAE3D3}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;height:100%}
+#app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 10px}
+.top .t{font-weight:600;color:var(--teal)}.top .w{font-size:12px;color:var(--muted)}
+.body{flex:1;padding:14px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--bg);position:sticky;bottom:0}
+.nav button{font:inherit;font-size:11px;background:none;border:0;color:var(--muted);padding:6px 0;cursor:pointer}
+.nav button.on{color:var(--teal);font-weight:600}
+.btn{font:inherit;border:1.5px solid var(--teal);color:var(--teal);background:var(--paper);border-radius:10px;padding:12px;text-align:center;font-weight:600;cursor:pointer;width:100%}
+.btn.fill{background:var(--teal);color:#fff}
+.btn.q{border-color:var(--line);color:var(--ink);font-weight:500;text-align:right}
+.btn[disabled]{opacity:.45}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--muted)}
+.lab{font-size:12px;font-weight:600;color:var(--teal)}
+.input{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:var(--paper);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--paper);cursor:pointer}
+.chip.on{border-color:var(--teal);color:var(--teal);font-weight:600;background:var(--soft)}
+.brand{font-size:32px;color:var(--teal);text-align:center;margin-top:30px;font-weight:600}
+video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#000}
+.k{font-size:11px;font-weight:600;color:var(--gold)}
+.obs{font-size:17px}.act{font-size:21px;font-weight:700;color:var(--teal);line-height:1.35}
+.dose{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.strip div{border:1px solid var(--sand);border-radius:5px;padding:5px 2px;text-align:center;font-size:10px;color:var(--muted);min-height:48px}
+.strip .n{font-weight:600;color:var(--teal);display:block;margin-bottom:3px}
+.strip .o{background:var(--shade)}.strip .m{color:var(--pen);font-weight:600}
+.shade{flex:1;background:var(--shade);border-radius:16px;min-height:300px}
+.count{font-size:20px;color:var(--teal);font-weight:700;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.grid div{aspect-ratio:1;border:1px solid var(--sand);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--pen)}
+.grid .o{background:var(--shade);border-color:var(--shade)}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row span:last-child{color:var(--muted)}
+.res{font-size:12px;color:var(--teal);text-align:center;text-decoration:underline;margin-top:8px}
+.err{color:#8A3B2E;font-size:13px}
+textarea.input{resize:none;height:44px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// A Wider Life · web client. Renders what the Worker returns; computes no rule of its own.
+const API = localStorage.getItem("awl.api") || "https://a-wider-life.ahmed-haz.workers.dev";
+const T = {
+  ar: { door:"امسح رمز نسختك", doorHint:"الرمز في آخر صفحة من كتابك. مفيش كاميرا؟ اكتب الحروف اللي تحته.", enter:"ادخل", cam:"افتح الكاميرا", before:"قبل ما تبدأ", tz:"منطقتك الزمنية", tzHint:"جبناها من جهازك. لو صح اضغط تمام.", ok:"تمام", openDay:"يومك المفتوح اسمه إيه؟", openHint:"يوم في الأسبوع مفيهوش مطلوب. سمّيه مرة، وما تنقلوش كل أسبوع.", who:"هتقوله لمين؟", whoHint:"اسم واحد بس. التطبيق مش هيبعتله حاجة، ده ليك إنت.", next:"كمّل", circle:"هتبدأ من أنهي دايرة؟", start:"ابدأ", week:"الأسبوع", day:"اليوم", notebook:"الدفتر", settings:"الإعدادات", sheet:"صفحة الأسبوع", f1:"أنا فين دلوقتي", f2:"بشتغل على إيه", f3:"الحدث اللي هعلّق عليه", f3h:"حاجة بتحصل في يومي أصلاً، وأنا اللي بختاره", f4:"الفعل بتلات جرعات", f4h:"أقل حاجة نفس الفعل أصغر، مش فعل تاني أسهل", full:"الكاملة", half:"النص", min:"أقل حاجة", f5:"العلامة", f5h:"حاجة تلاحظها، مش حاجة تعدّها", f6:"الأسبوع", save:"احفظ الورقة", pin:"ثبّت فعل المقال في ورقتي", locked:"الورقة اتقفلت. الفعل ما بيتغيّرش في نص الأسبوع، الجرعة هي اللي بتتغيّر.", foot:"عدّاد مش سلسلة · ومفيش خانة للفشل", says:"حياة أوسع النهاردة بتقولك", obs:"الملاحظة", actL:"الفعل", sign:"العلامة", tapAfter:"اضغط بعد ما تعمله، مش قبل", done:"تم", smaller:"أصغر", doseL:"الجرعة", first:"أول يوم في الأسبوع: اقرا المقال واملا ورقتك.", question:"سؤال واحد. قف عنده دقيقة.", noRight:"مفيش إجابة صح. الإجابة بتتكتب زي ما هي.", incomplete:"الورقة لسه ناقصة: الدايرة والخصلة والحدث والفعل الكامل.", witness:"يومك المفتوح {d}، وقلت لـ{w}.", moved:"{p} يوم، اتحركت في {m}", pause:"إيقاف مؤقت", resume:"استئناف", startOver:"بداية جديدة", del:"حذف الحساب", resources:"موارد بلدك", circles:{self:"نفسي",home:"بيتي",work:"شغلي",people:"ناسي"}, doses:{full:"الكاملة",half:"النص",min:"أقل حاجة"}, sure:"متأكد؟ ده بيمسح كل حاجة على النسخة دي.", tomorrow:"نبضة بكرة، اسمعها الليلة واعملها الصبح" },
+  en: { door:"Scan your copy's code", doorHint:"It is on the last page of your book. No camera? Type the letters under it.", enter:"Enter", cam:"Open the camera", before:"Before you start", tz:"Your time zone", tzHint:"We took it from your device. If it is right, tap OK.", ok:"OK", openDay:"What is your open day called?", openHint:"One day a week with nothing required. Name it once, and do not move it every week.", who:"Who will you tell?", whoHint:"One name only. The app will never message them. This is for you.", next:"Continue", circle:"Which circle will you start from?", start:"Start", week:"Week", day:"Day", notebook:"Notebook", settings:"Settings", sheet:"THE WEEK SHEET", f1:"Where I am now", f2:"What I am working on", f3:"What it hangs on", f3h:"something that happens in my day anyway, and I choose it", f4:"The act, in three doses", f4h:"the smallest is the same act made smaller, not an easier one", full:"Full", half:"Half", min:"Smallest", f5:"The sign", f5h:"something you would notice, not something you count", f6:"The week", save:"Save the sheet", pin:"Pin the article's act to my sheet", locked:"The sheet is locked. The act does not change mid-week; the dose does.", foot:"A counter, not a chain. There is no box for failure.", says:"A Wider Life says today", obs:"Where you are", actL:"The act", sign:"The sign", tapAfter:"Tap after you do it, not before", done:"Done", smaller:"Smaller", doseL:"Dose", first:"First day of the week: read the article and fill your sheet.", question:"One question. Stay with it for a minute.", noRight:"There is no right answer. It is written down as it is.", incomplete:"The sheet is not complete yet: circle, trait, anchor and the full act.", witness:"Your open day is {d}, and you told {w}.", moved:"{p} days. You moved on {m}.", pause:"Pause", resume:"Resume", startOver:"Start over", del:"Delete account", resources:"Your country's resources", circles:{self:"Myself",home:"My home",work:"My work",people:"My people"}, doses:{full:"Full",half:"Half",min:"Smallest"}, sure:"Sure? This wipes everything on this copy.", tomorrow:"Tomorrow's pulse. Hear it tonight, do it in the morning" },
+};
+const S = { token: localStorage.getItem("awl.token"), lang: localStorage.getItem("awl.lang") || "ar", screen: "door", data: null, err: null };
+const t = () => T[S.lang];
+const app = document.getElementById("app");
+const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, { ...opts, headers: { "content-type": "application/json", ...(S.token ? { authorization: "Bearer " + S.token } : {}), ...(opts.headers || {}) } });
+  const text = await res.text(); let data = null; try { data = text ? JSON.parse(text) : null; } catch {}
+  if (!res.ok) { const e = new Error((data && data.code) || res.status); e.status = res.status; e.data = data; throw e; }
+  return data;
+}
+
+function setLang(l) { S.lang = l; localStorage.setItem("awl.lang", l); document.documentElement.lang = l; document.documentElement.dir = l === "ar" ? "rtl" : "ltr"; }
+setLang(S.lang);
+
+function nav(active) {
+  const x = t();
+  return `<div class="nav">${[["week", x.week], ["day", x.day], ["notebook", x.notebook], ["settings", x.settings]].map(([k, l]) => `<button class="${active === k ? "on" : ""}" data-go="${k}">${l}</button>`).join("")}</div>`;
+}
+function top(title, sub = "") { return `<div class="top"><div class="t">${h(title)}</div><div class="w">${h(sub)}</div></div>`; }
+const errLine = () => S.err ? `<div class="err">${h(S.err)}</div>` : "";
+
+// ---------- screens ----------
+function door() {
+  const x = t();
+  app.innerHTML = `<div class="body"><div class="brand">${S.lang === "ar" ? "حياة أوسع" : "A Wider Life"}</div>
+    <video id="cam" playsinline muted hidden></video>
+    <button class="btn" id="camBtn">${x.cam}</button>
+    <div class="hint">${x.doorHint}</div>
+    <input class="input" id="code" placeholder="KX7F2 QMD9R TA4H7" autocapitalize="characters" autocomplete="off" style="direction:ltr;text-align:center;letter-spacing:.12em">
+    ${errLine()}<button class="btn fill" id="enter">${x.enter}</button>
+    <div class="hint" style="text-align:center;margin-top:auto"><button class="chip" data-lang="${S.lang === "ar" ? "en" : "ar"}">${S.lang === "ar" ? "English" : "عربي"}</button></div></div>`;
+  const q = new URLSearchParams(location.search).get("k") || (location.pathname.match(/\/k\/([A-Za-z0-9\s\-]+)/) || [])[1];
+  if (q) { document.getElementById("code").value = q; open(q); }
+  document.getElementById("enter").onclick = () => open(document.getElementById("code").value);
+  document.getElementById("camBtn").onclick = scan;
+}
+async function open(code) {
+  S.err = null;
+  try {
+    const r = await api("/v1/session/open", { method: "POST", body: JSON.stringify({ code }) });
+    S.token = r.token; localStorage.setItem("awl.token", r.token); setLang(r.lang);
+    history.replaceState(null, "", "/");
+    r.state === "entry" ? entry() : go("day");
+  } catch (e) { S.err = e.status === 404 ? (S.lang === "ar" ? "الرمز مش معروف. اتأكد من الحروف." : "Unknown code. Check the letters.") : String(e.message); door(); }
+}
+async function scan() {
+  const v = document.getElementById("cam"); v.hidden = false;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); v.srcObject = stream; await v.play();
+    if (!("BarcodeDetector" in window)) { S.err = S.lang === "ar" ? "الكاميرا شغالة بس المتصفح ده ما بيقراش الرمز. اكتب الحروف." : "This browser cannot read the code. Type the letters."; door(); return; }
+    const det = new BarcodeDetector({ formats: ["qr_code"] });
+    const tick = async () => { if (v.hidden) return; try { const [c] = await det.detect(v); if (c) { const m = c.rawValue.match(/\/k\/([A-Za-z0-9]+)/); stream.getTracks().forEach((tr) => tr.stop()); return open(m ? m[1] : c.rawValue); } } catch {} requestAnimationFrame(tick); };
+    tick();
+  } catch { S.err = S.lang === "ar" ? "ما قدرناش نفتح الكاميرا. اكتب الحروف." : "Could not open the camera. Type the letters."; door(); }
+}
+
+function entry(step = 1, st = { tz: Intl.DateTimeFormat().resolvedOptions().timeZone, open: 5, names: null, witness: "", circle: "self" }) {
+  const x = t();
+  const DAYS = S.lang === "ar" ? ["الأحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  if (st.open === 5 && S.lang === "en") st.open = 0;
+  let inner = "";
+  if (step === 1) inner = `<div class="lab">${x.tz}</div><div class="hint">${x.tzHint}</div><input class="input" id="tz" value="${h(st.tz)}"><div style="margin-top:auto"></div><button class="btn fill" id="n">${x.ok}</button>`;
+  if (step === 2) inner = `<div class="lab">${x.openDay}</div><div class="hint">${x.openHint}</div><div class="chips">${DAYS.map((d, i) => `<button class="chip ${i === st.open ? "on" : ""}" data-d="${i}">${d}</button>`).join("")}</div>
+    <div class="lab" style="margin-top:10px">${x.who}</div><div class="hint">${x.whoHint}</div><input class="input" id="wit" value="${h(st.witness)}"><div style="margin-top:auto"></div><button class="btn fill" id="n">${x.next}</button>`;
+  if (step === 3) inner = `<div class="lab">${x.circle}</div><div class="chips">${Object.entries(x.circles).map(([k, l]) => `<button class="chip ${k === st.circle ? "on" : ""}" data-c="${k}">${l}</button>`).join("")}</div>${errLine()}<div style="margin-top:auto"></div><button class="btn fill" id="n">${x.start}</button>`;
+  app.innerHTML = top(x.before, `${step} / 3`) + `<div class="body">${inner}</div>`;
+  app.querySelectorAll("[data-d]").forEach((b) => b.onclick = () => { st.open = +b.dataset.d; entry(2, st); });
+  app.querySelectorAll("[data-c]").forEach((b) => b.onclick = () => { st.circle = b.dataset.c; entry(3, st); });
+  document.getElementById("n").onclick = async () => {
+    if (step === 1) { st.tz = document.getElementById("tz").value.trim(); return entry(2, st); }
+    if (step === 2) { st.witness = document.getElementById("wit").value.trim(); return entry(3, st); }
+    // the reader's week: the first day is the day after the open day; names in that order
+    const first = (st.open + 1) % 7; st.names = Array.from({ length: 7 }, (_, i) => DAYS[(first + i) % 7]);
+    try { await api("/v1/entry", { method: "POST", body: JSON.stringify({ timezone: st.tz, open_day: st.open, day_names: st.names, witness_name: st.witness, circle: st.circle }) }); go("week"); }
+    catch (e) { S.err = e.status === 451 ? (S.lang === "ar" ? "بلدك لسه ما اتفتحش." : "Your country is not open yet.") : String(e.message); entry(3, st); }
+  };
+}
+
+function stripHtml(strip) { return `<div class="strip">${strip.map((d) => `<div class="${d.kind === "open" ? "o" : ""}"><span class="n">${h(d.name)}</span>${d.kind === "act" ? `<span class="${d.answer ? "m" : ""}">${d.answer === "done" ? t().done : d.answer === "smaller" ? t().smaller : ""}</span>` : d.kind}</div>`).join("")}</div>`; }
+const pulseHtml = (p, x) => `<div class="k">${x.obs}</div><div class="obs">${h(p.observation)}</div>${p.audio.observation ? `<audio controls src="${h(p.audio.observation)}"></audio>` : ""}
+  <div class="k">${x.actL}</div><span class="dose">${x.doseL}: ${x.doses[p.dose]}</span><div class="act">${h(p.act)}</div>${p.audio.act ? `<audio controls src="${h(p.audio.act)}"></audio>` : ""}
+  <div class="k">${x.sign}</div><div>${h(p.sign)}</div>`;
+
+async function day() {
+  const x = t(); let d;
+  try { d = await api("/v1/today"); } catch (e) { if (e.status === 409 && e.message === "entry_incomplete") return entry(); if (e.status === 401) return door(); S.err = String(e.message); }
+  if (!d) { app.innerHTML = top(x.day) + `<div class="body">${errLine()}</div>` + nav("day"); return bind(); }
+  let inner = "";
+  if (d.kind === "open") inner = `<div class="shade"></div>`;
+  else if (d.kind === "question") inner = `<div class="hint">${x.question}</div><div class="act">${h(d.question?.text || "")}</div>${(d.question?.options || []).map((o, i) => `<button class="btn q" data-q="${i}" ${d.answered ? "disabled" : ""}>${h(o)}</button>`).join("")}<div class="hint">${x.noRight}</div>`;
+  else if (d.kind === "first") inner = `<div class="hint">${x.first}</div>${d.witness ? `<div class="hint">${x.witness.replace("{d}", h(d.witness.open_day)).replace("{w}", h(d.witness.witness))}</div>` : ""}${d.first ? `<div class="act">${h(d.first.title)}</div><div class="k">${x.f4}</div><div>${h(d.first.act_full)} · ${h(d.first.act_half)} · ${h(d.first.act_min)}</div>` : ""}<button class="btn" data-go="week">${x.sheet}</button>${d.next?.pulse ? `<div class="hint" style="margin-top:14px">${x.tomorrow}</div>${pulseHtml(d.next.pulse, x)}` : ""}`;
+  else inner = `<div class="hint">${x.says}</div>${d.pulse ? pulseHtml(d.pulse, x) : `<div class="hint">${x.incomplete}</div>`}
+    ${d.answerable && d.pulse ? `<div class="hint" style="text-align:center;margin-top:auto">${x.tapAfter}</div><div class="two"><button class="btn fill" data-a="done">${x.done}</button><button class="btn" data-a="smaller">${x.smaller}</button></div>` : ""}
+    ${d.next?.pulse ? `<div class="hint" style="margin-top:14px">${x.tomorrow}</div>${pulseHtml(d.next.pulse, x)}` : ""}`;
+  app.innerHTML = top(d.strip[d.day - 1]?.name || x.day, `${x.week} ${d.week_no}`) + `<div class="body">${inner}${errLine()}${stripHtml(d.strip)}${d.resources ? `<div class="res">${x.resources}: ${h(d.resources.name)} ${h(d.resources.number)}</div>` : ""}</div>` + nav("day");
+  app.querySelectorAll("[data-a]").forEach((b) => b.onclick = async () => { try { const r = await api("/v1/answer", { method: "POST", body: JSON.stringify({ answer: b.dataset.a }) }); if (r.smaller) { S.err = null; } day(); } catch (e) { S.err = String(e.message); day(); } });
+  app.querySelectorAll("[data-q]").forEach((b) => b.onclick = async () => { try { await api("/v1/question", { method: "POST", body: JSON.stringify({ option: +b.dataset.q }) }); day(); } catch (e) { S.err = String(e.message); day(); } });
+  bind();
+}
+
+async function week() {
+  const x = t(); let w;
+  try { w = await api("/v1/week"); } catch (e) { if (e.status === 409) return entry(); if (e.status === 401) return door(); S.err = String(e.message); }
+  if (!w) { app.innerHTML = top(x.sheet) + `<div class="body">${errLine()}</div>` + nav("week"); return bind(); }
+  const ro = w.locked ? "disabled" : "";
+  const f = (k, v, hint) => `<div class="lab">${k}</div>${hint ? `<div class="hint">${hint}</div>` : ""}<input class="input" data-f="${v}" value="${h(w[v] || "")}" ${ro} maxlength="140">`;
+  app.innerHTML = top(x.sheet, `${x.week} ${w.week_no}`) + `<div class="body">
+    ${w.article ? `<div class="act">${h(w.article.title)}</div><details><summary class="hint">${S.lang === "ar" ? "المقال" : "The article"}</summary><div>${h(w.article.body_md)}</div></details>` : ""}
+    <div class="lab">${x.f1}</div><div class="chips">${Object.entries(x.circles).map(([k, l]) => `<button class="chip ${k === w.circle ? "on" : ""}" data-circle="${k}" ${ro}>${l}</button>`).join("")}</div>
+    <div class="lab">${x.f2}</div><div>${h(w.trait_id || "")}</div>
+    ${f(x.f3, "anchor_text", x.f3h)}
+    <div class="lab">${x.f4}</div><div class="hint">${x.f4h}</div>
+    ${f(x.full, "act_full")}${f(x.half, "act_half")}${f(x.min, "act_min")}
+    ${f(x.f5, "sign_text", x.f5h)}
+    ${w.locked ? `<div class="hint">${x.locked}</div>` : `<button class="btn" id="pin">${x.pin}</button><button class="btn fill" id="save">${x.save}</button>`}
+    ${errLine()}<div class="hint" style="text-align:center">${x.foot}</div></div>` + nav("week");
+  if (!w.locked) {
+    document.getElementById("save").onclick = async () => { const body = {}; app.querySelectorAll("[data-f]").forEach((i) => body[i.dataset.f] = i.value); try { await api("/v1/week", { method: "PUT", body: JSON.stringify(body) }); S.err = null; week(); } catch (e) { S.err = String(e.message); week(); } };
+    document.getElementById("pin").onclick = async () => { try { await api("/v1/week/pin", { method: "POST" }); week(); } catch (e) { S.err = String(e.message); week(); } };
+    app.querySelectorAll("[data-circle]").forEach((b) => b.onclick = async () => { try { await api("/v1/week", { method: "PUT", body: JSON.stringify({ circle: b.dataset.circle }) }); week(); } catch (e) { S.err = String(e.message); week(); } });
+  }
+  bind();
+}
+
+async function notebook() {
+  const x = t(); let n;
+  try { n = await api("/v1/notebook"); } catch (e) { if (e.status === 401) return door(); if (e.status === 409) return entry(); S.err = String(e.message); }
+  if (!n) { app.innerHTML = top(x.notebook) + `<div class="body">${errLine()}</div>` + nav("notebook"); return bind(); }
+  const grid = n.grid.map((e) => `<div class="${e.answer === "empty" ? "" : ""}">${e.answer === "done" ? "●" : e.answer === "smaller" ? "◐" : e.answer === "question" ? "?" : ""}</div>`).join("");
+  app.innerHTML = top(x.notebook) + `<div class="body"><div class="count">${x.moved.replace("{p}", n.count.passed).replace("{m}", n.count.moved)}</div><div class="grid">${grid}</div>
+    ${n.weeks.map((w) => `<div class="row"><span>${x.week} ${w.week_no} · ${x.circles[w.circle] || w.circle} · ${h(w.trait_id || "")}</span><span>${w.week_no === n.current_week ? (S.lang === "ar" ? "الأسبوع ده" : "This week") : "›"}</span></div>`).join("")}
+    ${n.resources ? `<div class="res">${x.resources}: ${h(n.resources.name)} ${h(n.resources.number)}</div>` : ""}</div>` + nav("notebook");
+  bind();
+}
+
+async function settings() {
+  const x = t();
+  app.innerHTML = top(x.settings) + `<div class="body">
+    <div class="row"><span>API</span><span style="direction:ltr">${h(API)}</span></div>
+    <button class="btn" id="pause">${x.pause}</button><button class="btn" id="resume">${x.resume}</button>
+    <div style="margin-top:auto"></div>
+    <button class="btn" id="so">${x.startOver}</button><button class="btn" id="del">${x.del}</button>${errLine()}</div>` + nav("settings");
+  const act = (action) => async () => { if ((action === "start_over" || action === "delete") && !confirm(x.sure)) return; try { await api("/v1/account", { method: "POST", body: JSON.stringify({ action }) }); if (action === "start_over" || action === "delete") { localStorage.removeItem("awl.token"); S.token = null; return door(); } settings(); } catch (e) { S.err = String(e.message); settings(); } };
+  document.getElementById("pause").onclick = act("pause"); document.getElementById("resume").onclick = act("resume");
+  document.getElementById("so").onclick = act("start_over"); document.getElementById("del").onclick = act("delete");
+  bind();
+}
+
+function bind() {
+  app.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => go(b.dataset.go));
+  app.querySelectorAll("[data-lang]").forEach((b) => b.onclick = () => { setLang(b.dataset.lang); door(); });
+}
+function go(s) { S.err = null; ({ day, week, notebook, settings })[s](); }
+S.token ? go("day") : door();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
