@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  localTime, dayIndex, firstDayOfWeek, weekStartDate, nextDose, weekStartReset, visibility,
+  localTime, dayIndex, firstDayOfWeek, weekStartDate, firstWeekStart, nextDose, weekStartReset, visibility,
   closeDay, assemblePulse, counts, sheetComplete, cleanField, addDays, OPEN_DAY, QUESTION_DAY,
 } from "../src/engine";
 
@@ -39,6 +39,16 @@ describe("the week shape", () => {
   it("finds the week start date", () => {
     const wed = localTime(new Date("2026-09-23T10:00:00Z"), "Africa/Cairo"); // Wed 23 Sep
     expect(weekStartDate(wed, FRI)).toBe("2026-09-19"); // Saturday
+  });
+
+  it("a reader's first week starts today on their first day, otherwise on the next first day", () => {
+    const SAT = 6;
+    const thu = { date: "2026-09-17", dow: 4, hour: 3, minute: 0 };   // Thursday, open day Saturday: first day is Sunday
+    expect(firstWeekStart(thu, SAT)).toBe("2026-09-20");
+    const sun = { date: "2026-09-20", dow: 0, hour: 9, minute: 0 };   // entering on the first day itself starts today
+    expect(firstWeekStart(sun, SAT)).toBe("2026-09-20");
+    const sat = { date: "2026-09-19", dow: 6, hour: 12, minute: 0 };  // entering on the open day: tomorrow
+    expect(firstWeekStart(sat, SAT)).toBe("2026-09-20");
   });
 });
 

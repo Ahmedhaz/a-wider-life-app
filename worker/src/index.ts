@@ -4,7 +4,7 @@
 import { Db, DbError, Env, enc } from "./db";
 import { generateCode, normaliseCode, printedForm, sha256Hex, randomToken } from "./codes";
 import {
-  localTime, dayIndex, weekStartDate, visibility, nextDose, weekStartReset, closeDay, assemblePulse,
+  localTime, dayIndex, weekStartDate, firstWeekStart, visibility, nextDose, weekStartReset, closeDay, assemblePulse,
   counts, sheetComplete, cleanField, addDays, OPEN_DAY, QUESTION_DAY, ACTING_DAYS, isActingDay,
   type Dose, type Answer, type LocalTime,
 } from "./engine";
@@ -113,6 +113,9 @@ function acts(week: Week) {
   return { act_full: full, act_half: week.act_half ?? full, act_min: week.act_min ?? week.act_half ?? full, sign_text: week.sign_text ?? "" };
 }
 
+/** True until the reader's first day arrives: sheet open, no pulse, no answer, no day-close. */
+const beforeStart = (local: LocalTime, week: Week) => local.date < week.started_on;
+
 function strip(week: Week, entries: Entry[], user: User) {
   const byIdx = new Map(entries.map((e) => [e.day_index, e]));
   return Array.from({ length: 7 }, (_, i) => {
@@ -164,15 +167,18 @@ async function entry(ctx: Ctx, req: Request, env: Env): Promise<Response> {
   if (!countryOf(timezone) && env.DEV_OPEN_ALL_COUNTRIES !== "true") throw new HttpError(451, "country_not_open");
 
   const local = localTime(ctx.now, timezone);
+  // No week starts without a sheet (PRD section 6): the first week begins on the reader's next first day.
+  // Entering on the first day itself starts today; any other day, the sheet is open until then and nothing counts.
+  const start = firstWeekStart(local, openDay);
   const user = await ctx.db.insert<User>("users", {
     book_id: ctx.book.id, lang: ctx.book.lang, timezone, open_day: openDay, day_names: names,
-    witness_name: cleanField(b.witness_name), first_local_date: local.date,
+    witness_name: cleanField(b.witness_name), first_local_date: start,
   });
   const i = ARCS.indexOf(circle);
   const order = [...ARCS.slice(i), ...ARCS.slice(0, i)];
   await ctx.db.insert("program_state", { user_id: user.id, arc: circle, arc_order: order, week_no: 1 });
   const art = await articleFor(ctx.db, user.lang, circle, 1);
-  await ctx.db.insert("weeks", { user_id: user.id, week_no: 1, article_id: art?.id ?? null, circle, trait_id: art?.trait_id ?? null, started_on: weekStartDate(local, openDay) });
+  await ctx.db.insert("weeks", { user_id: user.id, week_no: 1, article_id: art?.id ?? null, circle, trait_id: art?.trait_id ?? null, started_on: start });
   await ctx.db.update("books", `id=eq.${ctx.book.id}`, { user_id: user.id });
   await ctx.db.update("sessions", `book_id=eq.${ctx.book.id}`, { user_id: user.id });
   return json({ ok: true, user: publicUser(user) });
@@ -186,7 +192,9 @@ async function today(ctx: Ctx, env: Env): Promise<Response> {
   const user = requireUser(ctx);
   const local = localTime(ctx.now, user.timezone);
   const { state, week, article } = await currentWeek(ctx, user, local);
-  const vis = visibility(local, user.open_day);
+  const before = beforeStart(local, week);
+  const vis = before ? { today: 1, answerable: false, next: null as number | null, sheetLocked: false } : visibility(local, user.open_day);
+  const firstDay = before || vis.today === 1;
   const entries = await weekEntries(ctx.db, user, week);
   const todayEntry = entries.find((e) => e.local_date === local.date) ?? null;
   const pulses = article ? await ctx.db.select<Pulse>("pulses", `article_id=eq.${article.id}&select=*`) : [];
@@ -196,17 +204,19 @@ async function today(ctx: Ctx, env: Env): Promise<Response> {
     if (!p || !sheetComplete(week)) return null;
     return assemblePulse(p, acts(week), article, state.dose);
   };
-  const witnessLine = vis.today === 1 && user.witness_name
+  const witnessLine = firstDay && user.witness_name
     ? { open_day: user.day_names[6], witness: user.witness_name } : null;
   return json({
     local: { date: local.date, hour: local.hour },
-    week_no: week.week_no, day: vis.today, kind: vis.today === OPEN_DAY ? "open" : vis.today === QUESTION_DAY ? "question" : vis.today === 1 ? "first" : "act",
+    week_no: week.week_no, day: vis.today,
+    kind: before ? "before" : vis.today === OPEN_DAY ? "open" : vis.today === QUESTION_DAY ? "question" : vis.today === 1 ? "first" : "act",
+    starts_on: before ? week.started_on : null,
     dose: state.dose, answered: todayEntry?.answer ?? null, answerable: vis.answerable && !todayEntry && user.status === "active",
     sheet_complete: sheetComplete(week), sheet_locked: vis.sheetLocked,
     pulse: pulseFor(vis.today),
     next: vis.next ? { day: vis.next, pulse: pulseFor(vis.next) } : null,
     question: vis.today === QUESTION_DAY && article ? { text: article.question, options: article.options } : null,
-    first: vis.today === 1 && article ? { title: article.title, act_full: article.act_full, act_half: article.act_half, act_min: article.act_min, sign_hint: article.sign_hint } : null,
+    first: firstDay && article ? { title: article.title, act_full: article.act_full, act_half: article.act_half, act_min: article.act_min, sign_hint: article.sign_hint } : null,
     witness: witnessLine,
     strip: strip(week, entries, user),
     resources: resourcesFor(user, env),
@@ -221,6 +231,7 @@ async function answer(ctx: Ctx, req: Request): Promise<Response> {
   if (a !== "done" && a !== "smaller") throw new HttpError(400, "bad_answer");
   const local = localTime(ctx.now, user.timezone);
   const { state, week, article } = await currentWeek(ctx, user, local);
+  if (beforeStart(local, week)) throw new HttpError(409, "not_started");
   const idx = dayIndex(local.dow, user.open_day);
   if (!isActingDay(idx)) throw new HttpError(409, "not_an_acting_day");
   if (!sheetComplete(week)) throw new HttpError(409, "sheet_incomplete");
@@ -245,6 +256,7 @@ async function question(ctx: Ctx, req: Request): Promise<Response> {
   if (![0, 1, 2].includes(opt)) throw new HttpError(400, "bad_option");
   const local = localTime(ctx.now, user.timezone);
   const { week } = await currentWeek(ctx, user, local);
+  if (beforeStart(local, week)) throw new HttpError(409, "not_started");
   if (dayIndex(local.dow, user.open_day) !== QUESTION_DAY) throw new HttpError(409, "not_question_day");
   const existing = await ctx.db.one<Entry>("entries", `user_id=eq.${user.id}&local_date=eq.${local.date}&select=id`);
   if (existing) throw new HttpError(409, "already_answered");
@@ -256,16 +268,16 @@ async function weekGet(ctx: Ctx): Promise<Response> {
   const user = requireUser(ctx);
   const local = localTime(ctx.now, user.timezone);
   const { week, article } = await currentWeek(ctx, user, local);
-  const vis = visibility(local, user.open_day);
-  return json({ ...sheetView(week, article, vis.sheetLocked), witness: user.witness_name, open_day_name: user.day_names[6] });
+  const locked = !beforeStart(local, week) && visibility(local, user.open_day).sheetLocked;
+  return json({ ...sheetView(week, article, locked), witness: user.witness_name, open_day_name: user.day_names[6], starts_on: week.started_on });
 }
 
 async function weekPut(ctx: Ctx, req: Request): Promise<Response> {
   const user = requireUser(ctx);
   const local = localTime(ctx.now, user.timezone);
   const { state, week, article } = await currentWeek(ctx, user, local);
-  const vis = visibility(local, user.open_day);
-  if (vis.sheetLocked || week.locked_at) return json({ code: "sheet_locked", message_key: "sheet_locked" }, 423);
+  const locked = !beforeStart(local, week) && visibility(local, user.open_day).sheetLocked;
+  if (locked || week.locked_at) return json({ code: "sheet_locked", message_key: "sheet_locked" }, 423);
   const b = await body(req);
   const patch: Record<string, unknown> = {};
   for (const f of ["anchor_text", "act_full", "act_half", "act_min", "sign_text"]) if (f in b) patch[f] = cleanField(b[f]);
@@ -298,8 +310,8 @@ async function weekPin(ctx: Ctx): Promise<Response> {
   const user = requireUser(ctx);
   const local = localTime(ctx.now, user.timezone);
   const { week, article } = await currentWeek(ctx, user, local);
-  const vis = visibility(local, user.open_day);
-  if (vis.sheetLocked) return json({ code: "sheet_locked", message_key: "sheet_locked" }, 423);
+  const locked = !beforeStart(local, week) && visibility(local, user.open_day).sheetLocked;
+  if (locked) return json({ code: "sheet_locked", message_key: "sheet_locked" }, 423);
   if (!article) throw new HttpError(409, "no_article");
   const [updated] = await ctx.db.update<Week>("weeks", `id=eq.${week.id}`, {
     act_full: article.act_full, act_half: article.act_half, act_min: article.act_min, sign_text: article.sign_hint, trait_id: article.trait_id,

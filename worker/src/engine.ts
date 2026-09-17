@@ -67,6 +67,15 @@ export function weekStartDate(local: LocalTime, openDayDow: number): string {
   return addDays(local.date, -(dayIndex(local.dow, openDayDow) - 1));
 }
 
+/**
+ * Where a reader's first week begins: today if today is their first day, otherwise the next first day.
+ * No week starts without a sheet, so nobody is dropped into the middle of a week with a locked sheet.
+ */
+export function firstWeekStart(local: LocalTime, openDayDow: number): string {
+  const start = weekStartDate(local, openDayDow);
+  return dayIndex(local.dow, openDayDow) === 1 ? start : addDays(start, 7);
+}
+
 export function isActingDay(idx: number): boolean { return idx >= 1 && idx <= ACTING_DAYS; }
 
 // ---------- the dose ladder · the ten most important lines in the product ----------
