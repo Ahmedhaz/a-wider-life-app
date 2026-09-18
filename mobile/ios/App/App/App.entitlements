@@ -6,7 +6,5 @@
 	<array>
 		<string>applinks:a-wider-life.ahmed-haz.workers.dev</string>
 	</array>
-	<key>aps-environment</key>
-	<string>development</string>
 </dict>
 </plist>
