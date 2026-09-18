@@ -1,1 +1,30 @@
-{ "name": "حياة أوسع · A Wider Life", "short_name": "A Wider Life", "start_url": "/", "display": "standalone", "background_color": "#F7F4ED", "theme_color": "#0E4A54", "icons": [] }
+{
+ "name": "حياة أوسع · A Wider Life",
+ "short_name": "A Wider Life",
+ "start_url": "/",
+ "display": "standalone",
+ "background_color": "#F7F4ED",
+ "theme_color": "#0E4A54",
+ "icons": [
+  {
+   "src": "/icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "/icons/icon-512-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "lang": "ar",
+ "dir": "rtl",
+ "id": "/",
+ "scope": "/"
+}
