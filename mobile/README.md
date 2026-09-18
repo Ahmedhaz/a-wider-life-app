@@ -1,7 +1,7 @@
 # A Wider Life · native shells
 
 `mobile/` wraps `web/` with Capacitor. The content still comes from the Worker; only the shell ships through the stores.
-Bundle id `com.awiderlife.app`, team `M3RPNM736H`, iOS 15+, iPhone only, portrait only.
+Bundle id `com.awiderlife.app`, team `M3RPNM736H`, iOS 15.5+ (Google ML Kit 7 needs it), iPhone only, portrait only.
 
 What the shell adds over the web page: the system camera for the printed code (`@capacitor-mlkit/barcode-scanning`),
 universal links (`https://a-wider-life.ahmed-haz.workers.dev/k/<code>` opens the app when installed; the Worker serves
