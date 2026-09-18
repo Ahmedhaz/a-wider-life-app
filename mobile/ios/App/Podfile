@@ -23,4 +23,14 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+  # Xcode 27 refuses deployment targets below 15.0, and each pod still declares 14.0 in its own podspec.
+  # Lift every Pods target (and the Pods project itself) to the app's floor, 15.5 (Google ML Kit 7).
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+  end
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+    end
+  end
 end
