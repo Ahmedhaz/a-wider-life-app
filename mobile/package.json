@@ -1,0 +1,21 @@
+{
+  "name": "a-wider-life-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Native shells (iOS, Android) around web/ · A Wider Life",
+  "scripts": {
+    "sync": "cap sync",
+    "ios": "cap open ios",
+    "copy": "cap copy"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/push-notifications": "^7.0.0",
+    "@capacitor-mlkit/barcode-scanning": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

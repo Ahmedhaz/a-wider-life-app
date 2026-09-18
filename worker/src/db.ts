@@ -8,6 +8,11 @@ export interface Env {
   BUILD?: string;
   ADMIN_ENABLED?: string;
   DEV_OPEN_ALL_COUNTRIES?: string;
+  /** "true" arms native push registration in the client; the sender is a later build. Default off. */
+  NOTIFY_ENABLED?: string;
+  /** Apple team and bundle id, for the apple-app-site-association the Worker serves. */
+  APPLE_TEAM_ID?: string;
+  IOS_BUNDLE_ID?: string;
   /** Static assets binding (the web client in ../web), present once wrangler.toml has [assets]. */
   ASSETS?: { fetch(req: Request): Promise<Response> };
 }

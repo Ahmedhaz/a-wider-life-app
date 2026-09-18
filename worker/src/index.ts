@@ -340,6 +340,18 @@ async function weekPast(ctx: Ctx, n: number): Promise<Response> {
   return json({ ...sheetView(week, article, true), strip: strip(week, entries, user) });
 }
 
+/** A native shell registers its push token here. Dormant until NOTIFY_ENABLED is "true"; nothing sends yet. */
+async function device(ctx: Ctx, req: Request, env: Env): Promise<Response> {
+  if (env.NOTIFY_ENABLED !== "true") throw new HttpError(404, "not_found");
+  const user = requireUser(ctx);
+  const b = await body<{ platform?: string; token?: string }>(req);
+  const platform = b.platform === "ios" || b.platform === "android" ? b.platform : null;
+  const token = typeof b.token === "string" ? b.token.trim().slice(0, 512) : "";
+  if (!platform || !token) throw new HttpError(400, "bad_device");
+  await ctx.db.upsert("devices", [{ user_id: user.id, platform, token, seen_at: ctx.now.toISOString() }], "token");
+  return json({ ok: true });
+}
+
 async function account(ctx: Ctx, req: Request): Promise<Response> {
   const b = await body<{ action?: string; email?: string }>(req);
   const { db, book } = ctx;
@@ -462,6 +474,17 @@ async function route(req: Request, env: Env): Promise<Response> {
   const p = url.pathname.replace(/\/$/, "") || "/";
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (p === "/__build") return new Response(env.BUILD ?? "dev", { headers: { "content-type": "text/plain", ...CORS } });
+  // What the native shell may switch on. Public, no secrets, no database.
+  if (p === "/v1/flags") return json({ notify: env.NOTIFY_ENABLED === "true" });
+  // The privacy policy lives in the assets (web/privacy.html); the store listing links to /privacy.
+  if (p === "/privacy" && env.ASSETS) return env.ASSETS.fetch(new Request(new URL("/privacy.html", req.url).toString(), { headers: req.headers }));
+  // Universal Links: iOS fetches this once per install; /k/<code> then opens the app when it is installed.
+  if (p === "/.well-known/apple-app-site-association" || p === "/apple-app-site-association") {
+    if (!env.APPLE_TEAM_ID || !env.IOS_BUNDLE_ID) throw new HttpError(404, "not_found");
+    const appID = `${env.APPLE_TEAM_ID}.${env.IOS_BUNDLE_ID}`;
+    return new Response(JSON.stringify({ applinks: { details: [{ appIDs: [appID], components: [{ "/": "/k/*", comment: "a copy code" }] }] }, webcredentials: { apps: [appID] } }),
+      { headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" } });
+  }
   // The printed QR is https://<host>/k/<code>. No asset lives there, so hand the client shell back and let it read the code.
   if (req.method === "GET" && /^\/k\/[A-Za-z0-9-]{1,40}$/.test(p) && env.ASSETS) {
     return env.ASSETS.fetch(new Request(new URL("/index.html", req.url).toString(), { headers: req.headers }));
@@ -502,6 +525,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   const past = p.match(/^\/v1\/week\/(\d{1,2})$/);
   if (past && m === "GET") return weekPast(ctx, Number(past[1]));
   if (p === "/v1/account" && m === "POST") return account(ctx, req);
+  if (p === "/v1/device" && m === "POST") return device(ctx, req, env);
   throw new HttpError(404, "not_found");
 }
 

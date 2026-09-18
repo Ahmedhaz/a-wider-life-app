@@ -1,0 +1,12 @@
+{
+  "appId": "com.awiderlife.app",
+  "appName": "حياة أوسع",
+  "webDir": "../web",
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#FBF9F4"
+  },
+  "plugins": {
+    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+  }
+}
