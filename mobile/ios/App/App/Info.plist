@@ -29,8 +29,6 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>الكاميرا لمسح رمز نسختك من الكتاب فقط. The camera reads the code printed in your copy of the book, nothing else.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -39,12 +39,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
-    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
-        // Called when the app was launched with an activity, including Universal Links.
-        // Feel free to add additional processing here, but if you want the App API to support
-        // tracking app url opens, make sure to keep this call
-        return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
-    }
 
 }
 
@@ -52,20 +46,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 // for apps built against the iOS 26+ SDK that never adopt the scene lifecycle.
 // Capacitor 7.6.9 ships no UISceneDelegate, so the shell provides its own.
 // The window and CAPBridgeViewController still come from Main.storyboard, named by
-// UISceneStoryboardFile in the scene manifest; the URL and user-activity callbacks
-// move here from UIApplicationDelegate and hand straight back to Capacitor.
+// UISceneStoryboardFile in the scene manifest; the URL callbacks move here from
+// UIApplicationDelegate and hand straight back to Capacitor.
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Deliver anything the app was launched with; a cold start from a universal
-        // link arrives here rather than through the delegate methods below.
+        // Deliver any URL the app was launched with.
         if let url = connectionOptions.urlContexts.first?.url {
             _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
-        }
-        for activity in connectionOptions.userActivities {
-            _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: activity) { _ in }
         }
     }
 
@@ -74,7 +64,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
     }
 
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
-        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity) { _ in }
-    }
 }
