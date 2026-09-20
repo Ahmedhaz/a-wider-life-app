@@ -153,6 +153,19 @@ async function sessionOpen(db: Db, req: Request): Promise<Response> {
   return json({ token, lang: book.lang, state: book.user_id ? "ready" : "entry" });
 }
 
+/** No printed copy and no code: mint an anchor row so a session still hangs off a book, the way every
+ *  handler downstream expects, and open on it. The code is generated but never shown to anyone. */
+async function sessionAnon(db: Db, req: Request): Promise<Response> {
+  const b = await body<{ lang?: string }>(req);
+  const lang = b.lang === "en" ? "en" : "ar";
+  const book = await db.insert<Book>("books", {
+    code: generateCode(), lang, edition: "digital", batch: "open", first_scan_at: new Date().toISOString(),
+  });
+  const token = randomToken();
+  await db.insert("sessions", { token_hash: await sha256Hex(token), book_id: book.id, user_id: null });
+  return json({ token, lang, state: "entry" });
+}
+
 async function entry(ctx: Ctx, req: Request, env: Env): Promise<Response> {
   if (ctx.user) throw new HttpError(409, "already_entered");
   const b = await body<{ timezone?: string; open_day?: number; day_names?: string[]; witness_name?: string; circle?: Arc }>(req);
@@ -501,6 +514,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (!db) throw new HttpError(503, "db_unconfigured");
 
   if (p === "/v1/session/open" && req.method === "POST") return sessionOpen(db, req);
+  if (p === "/v1/session/anon" && req.method === "POST") return sessionAnon(db, req);
 
   if (p.startsWith("/v1/admin/")) {
     requireAdmin(req, env);
