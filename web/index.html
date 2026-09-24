@@ -267,7 +267,7 @@ async function scheduleQuotes() {
     const slots = nextSlots(new Date(), NOTIF_MAX);
     await ln.schedule({ notifications: slots.map((at, i) => {
       const q = qs[(off + i) % qs.length];
-      return { id: 1000 + i, title: "ابن عربي", body: q.text, schedule: { at }, smallIcon: "ic_stat_icon_config_sample" };
+      return { id: 1000 + i, title: S.lang === "ar" ? "حياة أوسع" : "A Wider Life", body: q.text, schedule: { at }, smallIcon: "ic_stat_icon_config_sample" };
     }) });
     try { localStorage.setItem("awl.quotesAt", String((off + slots.length) % qs.length)); } catch {}
   } catch {}
