@@ -69,8 +69,8 @@ const API = (() => {
   return saved || (NATIVE ? PROD_API : location.origin);
 })();
 const T = {
-  ar: { offline:"ما قدرناش نوصل للخدمة. جرب تاني.", retry:"جرب تاني", before:"قبل ما تبدأ", tz:"منطقتك الزمنية", tzHint:"جبناها من جهازك. لو صح اضغط تمام.", ok:"تمام", openDay:"يومك المفتوح اسمه إيه؟", openHint:"يوم في الأسبوع مفيهوش مطلوب. سمّيه مرة، وما تنقلوش كل أسبوع.", who:"هتقوله لمين؟", whoHint:"اسم واحد بس. التطبيق مش هيبعتله حاجة، ده ليك إنت.", next:"كمّل", circle:"هتبدأ من أنهي دايرة؟", start:"ابدأ", week:"الأسبوع", day:"اليوم", notebook:"الدفتر", settings:"الإعدادات", sheet:"صفحة الأسبوع", f1:"أنا فين دلوقتي", f2:"بشتغل على إيه", f3:"الحدث اللي هعلّق عليه", f3h:"حاجة بتحصل في يومي أصلاً، وأنا اللي بختاره", f4:"الفعل بتلات جرعات", f4h:"أقل حاجة نفس الفعل أصغر، مش فعل تاني أسهل", full:"الكاملة", half:"النص", min:"أقل حاجة", f5:"العلامة", f5h:"حاجة تلاحظها، مش حاجة تعدّها", f6:"الأسبوع", save:"احفظ الورقة", pin:"ثبّت فعل المقال في ورقتي", locked:"الورقة اتقفلت. الفعل ما بيتغيّرش في نص الأسبوع، الجرعة هي اللي بتتغيّر.", foot:"عدّاد مش سلسلة · ومفيش خانة للفشل", says:"حياة أوسع النهاردة بتقولك", obs:"الملاحظة", actL:"الفعل", sign:"العلامة", tapAfter:"اضغط بعد ما تعمله، مش قبل", done:"تم", smaller:"أصغر", doseL:"الجرعة", first:"أول يوم في الأسبوع: اقرا المقال واملا ورقتك.", openK:"مفتوح", questionK:"سؤال", beforeStart:"أسبوعك الأول بيبدأ يوم {d} ({on}). لحد ساعتها اقرا المقال واملا ورقتك على مهلك، ومفيش حاجة بتتعدّ.", question:"سؤال واحد. قف عنده دقيقة.", noRight:"مفيش إجابة صح. الإجابة بتتكتب زي ما هي.", incomplete:"الورقة لسه ناقصة: الدايرة والخصلة والحدث والفعل الكامل.", witness:"يومك المفتوح {d}، وقلت لـ{w}.", moved:"{p} يوم، اتحركت في {m}", pause:"إيقاف مؤقت", resume:"استئناف", startOver:"بداية جديدة", del:"حذف الحساب", resources:"موارد بلدك", circles:{self:"نفسي",home:"بيتي",work:"شغلي",people:"ناسي"}, doses:{full:"الكاملة",half:"النص",min:"أقل حاجة"}, sure:"متأكد؟ ده بيمسح كل حاجة على النسخة دي.", tomorrow:"نبضة بكرة، اسمعها الليلة واعملها الصبح" },
-  en: { offline:"We could not reach the service. Try again.", retry:"Try again", before:"Before you start", tz:"Your time zone", tzHint:"We took it from your device. If it is right, tap OK.", ok:"OK", openDay:"What is your open day called?", openHint:"One day a week with nothing required. Name it once, and do not move it every week.", who:"Who will you tell?", whoHint:"One name only. The app will never message them. This is for you.", next:"Continue", circle:"Which circle will you start from?", start:"Start", week:"Week", day:"Day", notebook:"Notebook", settings:"Settings", sheet:"THE WEEK SHEET", f1:"Where I am now", f2:"What I am working on", f3:"What it hangs on", f3h:"something that happens in my day anyway, and I choose it", f4:"The act, in three doses", f4h:"the smallest is the same act made smaller, not an easier one", full:"Full", half:"Half", min:"Smallest", f5:"The sign", f5h:"something you would notice, not something you count", f6:"The week", save:"Save the sheet", pin:"Pin the article's act to my sheet", locked:"The sheet is locked. The act does not change mid-week; the dose does.", foot:"A counter, not a chain. There is no box for failure.", says:"A Wider Life says today", obs:"Where you are", actL:"The act", sign:"The sign", tapAfter:"Tap after you do it, not before", done:"Done", smaller:"Smaller", doseL:"Dose", first:"First day of the week: read the article and fill your sheet.", openK:"open", questionK:"question", beforeStart:"Your first week starts on {d} ({on}). Until then, read the article and fill your sheet at your own pace. Nothing is counted yet.", question:"One question. Stay with it for a minute.", noRight:"There is no right answer. It is written down as it is.", incomplete:"The sheet is not complete yet: circle, trait, anchor and the full act.", witness:"Your open day is {d}, and you told {w}.", moved:"{p} days. You moved on {m}.", pause:"Pause", resume:"Resume", startOver:"Start over", del:"Delete account", resources:"Your country's resources", circles:{self:"Myself",home:"My home",work:"My work",people:"My people"}, doses:{full:"Full",half:"Half",min:"Smallest"}, sure:"Sure? This wipes everything on this copy.", tomorrow:"Tomorrow's pulse. Hear it tonight, do it in the morning" },
+  ar: { quotes:"أقوال ابن عربي", quotesHint:"قول كل نص ساعة، من ١٠ صباحاً حتى ٢ بعد منتصف الليل.", on:"مفعّل", off:"متوقف", nativeOnly:"في التطبيق فقط", noPerm:"لازم تسمح بالإشعارات من إعدادات النظام.", offline:"ما قدرناش نوصل للخدمة. جرب تاني.", retry:"جرب تاني", before:"قبل ما تبدأ", tz:"منطقتك الزمنية", tzHint:"جبناها من جهازك. لو صح اضغط تمام.", ok:"تمام", openDay:"يومك المفتوح اسمه إيه؟", openHint:"يوم في الأسبوع مفيهوش مطلوب. سمّيه مرة، وما تنقلوش كل أسبوع.", who:"هتقوله لمين؟", whoHint:"اسم واحد بس. التطبيق مش هيبعتله حاجة، ده ليك إنت.", next:"كمّل", circle:"هتبدأ من أنهي دايرة؟", start:"ابدأ", week:"الأسبوع", day:"اليوم", notebook:"الدفتر", settings:"الإعدادات", sheet:"صفحة الأسبوع", f1:"أنا فين دلوقتي", f2:"بشتغل على إيه", f3:"الحدث اللي هعلّق عليه", f3h:"حاجة بتحصل في يومي أصلاً، وأنا اللي بختاره", f4:"الفعل بتلات جرعات", f4h:"أقل حاجة نفس الفعل أصغر، مش فعل تاني أسهل", full:"الكاملة", half:"النص", min:"أقل حاجة", f5:"العلامة", f5h:"حاجة تلاحظها، مش حاجة تعدّها", f6:"الأسبوع", save:"احفظ الورقة", pin:"ثبّت فعل المقال في ورقتي", locked:"الورقة اتقفلت. الفعل ما بيتغيّرش في نص الأسبوع، الجرعة هي اللي بتتغيّر.", foot:"عدّاد مش سلسلة · ومفيش خانة للفشل", says:"حياة أوسع النهاردة بتقولك", obs:"الملاحظة", actL:"الفعل", sign:"العلامة", tapAfter:"اضغط بعد ما تعمله، مش قبل", done:"تم", smaller:"أصغر", doseL:"الجرعة", first:"أول يوم في الأسبوع: اقرا المقال واملا ورقتك.", openK:"مفتوح", questionK:"سؤال", beforeStart:"أسبوعك الأول بيبدأ يوم {d} ({on}). لحد ساعتها اقرا المقال واملا ورقتك على مهلك، ومفيش حاجة بتتعدّ.", question:"سؤال واحد. قف عنده دقيقة.", noRight:"مفيش إجابة صح. الإجابة بتتكتب زي ما هي.", incomplete:"الورقة لسه ناقصة: الدايرة والخصلة والحدث والفعل الكامل.", witness:"يومك المفتوح {d}، وقلت لـ{w}.", moved:"{p} يوم، اتحركت في {m}", pause:"إيقاف مؤقت", resume:"استئناف", startOver:"بداية جديدة", del:"حذف الحساب", resources:"موارد بلدك", circles:{self:"نفسي",home:"بيتي",work:"شغلي",people:"ناسي"}, doses:{full:"الكاملة",half:"النص",min:"أقل حاجة"}, sure:"متأكد؟ ده بيمسح كل حاجة على النسخة دي.", tomorrow:"نبضة بكرة، اسمعها الليلة واعملها الصبح" },
+  en: { quotes:"Ibn Arabi quotes", quotesHint:"One saying every half hour, from 10am to 2am.", on:"On", off:"Off", nativeOnly:"App only", noPerm:"Allow notifications in system settings.", offline:"We could not reach the service. Try again.", retry:"Try again", before:"Before you start", tz:"Your time zone", tzHint:"We took it from your device. If it is right, tap OK.", ok:"OK", openDay:"What is your open day called?", openHint:"One day a week with nothing required. Name it once, and do not move it every week.", who:"Who will you tell?", whoHint:"One name only. The app will never message them. This is for you.", next:"Continue", circle:"Which circle will you start from?", start:"Start", week:"Week", day:"Day", notebook:"Notebook", settings:"Settings", sheet:"THE WEEK SHEET", f1:"Where I am now", f2:"What I am working on", f3:"What it hangs on", f3h:"something that happens in my day anyway, and I choose it", f4:"The act, in three doses", f4h:"the smallest is the same act made smaller, not an easier one", full:"Full", half:"Half", min:"Smallest", f5:"The sign", f5h:"something you would notice, not something you count", f6:"The week", save:"Save the sheet", pin:"Pin the article's act to my sheet", locked:"The sheet is locked. The act does not change mid-week; the dose does.", foot:"A counter, not a chain. There is no box for failure.", says:"A Wider Life says today", obs:"Where you are", actL:"The act", sign:"The sign", tapAfter:"Tap after you do it, not before", done:"Done", smaller:"Smaller", doseL:"Dose", first:"First day of the week: read the article and fill your sheet.", openK:"open", questionK:"question", beforeStart:"Your first week starts on {d} ({on}). Until then, read the article and fill your sheet at your own pace. Nothing is counted yet.", question:"One question. Stay with it for a minute.", noRight:"There is no right answer. It is written down as it is.", incomplete:"The sheet is not complete yet: circle, trait, anchor and the full act.", witness:"Your open day is {d}, and you told {w}.", moved:"{p} days. You moved on {m}.", pause:"Pause", resume:"Resume", startOver:"Start over", del:"Delete account", resources:"Your country's resources", circles:{self:"Myself",home:"My home",work:"My work",people:"My people"}, doses:{full:"Full",half:"Half",min:"Smallest"}, sure:"Sure? This wipes everything on this copy.", tomorrow:"Tomorrow's pulse. Hear it tonight, do it in the morning" },
 };
 const S = { token: localStorage.getItem("awl.token"), lang: localStorage.getItem("awl.lang") || "ar", screen: "door", data: null, err: null };
 const t = () => T[S.lang];
@@ -200,10 +200,15 @@ async function settings() {
   const x = t();
   app.innerHTML = topBar(x.settings) + `<div class="body">
     <div class="row"><span>API</span><span style="direction:ltr">${h(API)}</span></div>
+    <div class="row"><span>${x.quotes}</span><button class="chip" id="qt">${notifOn() ? x.on : x.off}</button></div>
+    <div class="hint">${x.quotesHint}</div>
     <button class="btn" id="pause">${x.pause}</button><button class="btn" id="resume">${x.resume}</button>
     <div style="margin-top:auto"></div>
     <button class="btn" id="so">${x.startOver}</button><button class="btn" id="del">${x.del}</button>${errLine()}</div>` + nav("settings");
   const act = (action) => async () => { if ((action === "start_over" || action === "delete") && !confirm(x.sure)) return; try { await api("/v1/account", { method: "POST", body: JSON.stringify({ action }) }); if (action === "start_over" || action === "delete") { localStorage.removeItem("awl.token"); S.token = null; return openAnon(); } settings(); } catch (e) { S.err = String(e.message); settings(); } };
+  const qt = document.getElementById("qt");
+  if (!PLUGIN("LocalNotifications")) { qt.disabled = true; qt.textContent = x.nativeOnly; }
+  else qt.onclick = async () => { const on = await setQuotes(!notifOn()); qt.textContent = on ? x.on : x.off; if (!on && notifOn()) S.err = x.noPerm; };
   document.getElementById("pause").onclick = act("pause"); document.getElementById("resume").onclick = act("resume");
   document.getElementById("so").onclick = act("start_over"); document.getElementById("del").onclick = act("delete");
   bind();
@@ -217,6 +222,77 @@ function go(s) { S.err = null; ({ day, week, notebook, settings })[s](); }
 S.token ? go("day") : openAnon();
 if (!NATIVE && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 
+
+// ---------- Ibn Arabi quotes, as local notifications ----------
+// Local, not push: nothing is scheduled by a server, so this works offline and needs no APNs key.
+// iOS caps an app at 64 PENDING notifications, so the window below is what makes this fit: 10:00 to
+// 02:00 every half hour is 33 a day, and we fill the queue up to NOTIF_MAX and refill on every open.
+const NOTIF_START_H = 10, NOTIF_END_H = 2, NOTIF_STEP_MIN = 30, NOTIF_MAX = 60;
+const notifOn = () => { try { return localStorage.getItem("awl.quotes") === "1"; } catch { return false; } };
+
+// Minutes from midnight that fall inside the window. The window wraps past midnight, so 01:30 is in
+// and 09:00 is out; comparing against a wrapped range rather than a simple start<=m<=end.
+const inWindow = (m) => { const h = m / 60; return NOTIF_START_H <= NOTIF_END_H ? h >= NOTIF_START_H && h <= NOTIF_END_H : h >= NOTIF_START_H || h <= NOTIF_END_H; };
+
+/** The next `count` half-hour slots inside the window, starting after `from`. */
+function nextSlots(from, count) {
+  const out = [];
+  const d = new Date(from);
+  d.setSeconds(0, 0);
+  d.setMinutes(Math.floor(d.getMinutes() / NOTIF_STEP_MIN) * NOTIF_STEP_MIN);
+  while (out.length < count) {
+    d.setMinutes(d.getMinutes() + NOTIF_STEP_MIN);
+    if (d > from && inWindow(d.getHours() * 60 + d.getMinutes())) out.push(new Date(d));
+  }
+  return out;
+}
+
+let QUOTES = null;
+async function loadQuotes() {
+  if (QUOTES) return QUOTES;
+  // Bundled in the app and served by the Worker, so it resolves both natively and on the web.
+  const r = await fetch(NATIVE ? "quotes.json" : "/quotes.json");
+  QUOTES = (await r.json()).quotes;
+  return QUOTES;
+}
+
+/** Clear whatever is queued and refill from now. Safe to call on every open; it is idempotent. */
+async function scheduleQuotes() {
+  const ln = PLUGIN("LocalNotifications");
+  if (!ln || !notifOn()) return;
+  try {
+    const pending = await ln.getPending();
+    if (pending.notifications.length) await ln.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+    const qs = await loadQuotes();
+    // Walk the quotes in order from a rotating offset, so a refill does not always restart at قول 1.
+    let off = 0; try { off = Number(localStorage.getItem("awl.quotesAt") || 0) % qs.length; } catch {}
+    const slots = nextSlots(new Date(), NOTIF_MAX);
+    await ln.schedule({ notifications: slots.map((at, i) => {
+      const q = qs[(off + i) % qs.length];
+      return { id: 1000 + i, title: "ابن عربي", body: q.text, schedule: { at }, smallIcon: "ic_stat_icon_config_sample" };
+    }) });
+    try { localStorage.setItem("awl.quotesAt", String((off + slots.length) % qs.length)); } catch {}
+  } catch {}
+}
+
+async function setQuotes(on) {
+  const ln = PLUGIN("LocalNotifications");
+  if (!ln) return false;
+  if (!on) {
+    try { localStorage.setItem("awl.quotes", "0"); } catch {}
+    try { const p = await ln.getPending(); if (p.notifications.length) await ln.cancel({ notifications: p.notifications.map((n) => ({ id: n.id })) }); } catch {}
+    return false;
+  }
+  let perm = await ln.checkPermissions();
+  if (perm.display !== "granted") perm = await ln.requestPermissions();
+  if (perm.display !== "granted") return false;
+  try { localStorage.setItem("awl.quotes", "1"); } catch {}
+  await scheduleQuotes();
+  return true;
+}
+
+const AppPlugin = PLUGIN("App");
+
 // Push registration is built but dormant: it runs only when the Worker's flag says so (decision due 24 Oct).
 async function registerPush() {
   const push = PLUGIN("PushNotifications"); if (!push || !S.token) return;
@@ -228,6 +304,8 @@ async function registerPush() {
   } catch {}
 }
 registerPush();
+scheduleQuotes();
+if (AppPlugin) AppPlugin.addListener("appStateChange", ({ isActive }) => { if (isActive) scheduleQuotes(); });
 </script>
 </body>
 </html>
