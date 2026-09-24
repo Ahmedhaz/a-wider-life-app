@@ -2,22 +2,23 @@
 # The one ship path. Tests, bundle, deploy, then close by an external result: the live build marker must
 # match, and health must answer. A green CI is not a deploy; a matching marker on the live URL is.
 #
-# First time on a machine: (cd worker && npm install && npx wrangler login)
+# First time on a machine: (cd worker && npm install && ./node_modules/.bin/wrangler login)
+# Local binaries on purpose: npx re-resolves through npm exec here and can stall for minutes.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_NAME="${1:-dev}"            # dev | staging | prod
 MARK="ship-$(date -u +%Y%m%dT%H%M%SZ)-$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo nogit)"
 
 echo "== tests"
-(cd "$ROOT/worker" && npx vitest run --reporter=dot)
-(cd "$ROOT/worker" && npx tsc --noEmit)
+(cd "$ROOT/worker" && ./node_modules/.bin/vitest run --reporter=dot)
+(cd "$ROOT/worker" && ./node_modules/.bin/tsc --noEmit)
 node "$ROOT/content/validate.mjs"
 
 echo "== bundle · $MARK"
-(cd "$ROOT/worker" && npx wrangler deploy --dry-run --outdir dist --var BUILD:"$MARK" >/dev/null)
+(cd "$ROOT/worker" && ./node_modules/.bin/wrangler deploy --dry-run --outdir dist --var BUILD:"$MARK" >/dev/null)
 
 echo "== deploy ($ENV_NAME)"
-OUT="$(cd "$ROOT/worker" && npx wrangler deploy --var BUILD:"$MARK" 2>&1 | tee /dev/stderr)"
+OUT="$(cd "$ROOT/worker" && ./node_modules/.bin/wrangler deploy --var BUILD:"$MARK" 2>&1 | tee /dev/stderr)"
 
 # The live URL comes from wrangler's own output, or from AWL_BASE_URL when a custom domain fronts the Worker.
 BASE_URL="${AWL_BASE_URL:-$(printf '%s\n' "$OUT" | grep -o 'https://[a-z0-9.-]*workers\.dev' | head -1)}"
