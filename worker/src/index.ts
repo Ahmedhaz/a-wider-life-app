@@ -403,6 +403,11 @@ async function account(ctx: Ctx, req: Request): Promise<Response> {
       const [u] = await db.update<User>("users", `id=eq.${user.id}`, { status: b.action === "pause" ? "paused" : "active" });
       return json({ ok: true, user: publicUser(u) });
     }
+    case "recovery_code": {
+      // The code IS the credential, so this is readable only by a session that already holds the copy.
+      requireUser(ctx);
+      return json({ code: book.code, printed: printedForm(book.code) });
+    }
     case "link_email": {
       const user = requireUser(ctx);
       const email = String(b.email ?? "").trim().toLowerCase();
@@ -457,6 +462,31 @@ async function adminContent(db: Db, req: Request): Promise<Response> {
   }));
   await db.upsert("pulses", pulses, "article_id,day_index");
   return json({ ok: true, article_id: article.id, pulses: pulses.length });
+}
+
+async function adminFunnel(db: Db): Promise<Response> {
+  const [books, users, weeks, entries, states] = await Promise.all([
+    db.select<{ id: string; edition: string; user_id: string | null }>("books", `select=id,edition,user_id`),
+    db.select<{ id: string; created_at: string }>("users", `select=id,created_at`),
+    db.select<{ user_id: string; week_no: number; trait_id: string | null; anchor_text: string | null; act_full: string | null }>("weeks", `select=user_id,week_no,trait_id,anchor_text,act_full`),
+    db.select<{ user_id: string; answer: string }>("entries", `select=user_id,answer`),
+    db.select<{ user_id: string; week_no: number }>("program_state", `select=user_id,week_no`),
+  ]);
+  const opened = books.filter((b) => b.edition === "digital").length;   // an app opened = one anonymous copy
+  const entered = users.length;                                          // finished the three onboarding steps
+  const sheetDone = new Set(weeks.filter((w) => w.trait_id && w.anchor_text && w.act_full).map((w) => w.user_id)).size;
+  const acted = new Set(entries.filter((e) => e.answer === "done" || e.answer === "smaller").map((e) => e.user_id)).size;
+  const week2 = states.filter((s) => s.week_no >= 2).length;
+  const pct = (n: number) => (opened ? Math.round((n / opened) * 1000) / 10 : null);
+  return json({
+    steps: [
+      { step: "opened_app", n: opened, of_opened: 100 },
+      { step: "finished_entry", n: entered, of_opened: pct(entered) },
+      { step: "completed_a_sheet", n: sheetDone, of_opened: pct(sheetDone) },
+      { step: "acted_at_least_once", n: acted, of_opened: pct(acted) },
+      { step: "reached_week_2", n: week2, of_opened: pct(week2) },
+    ],
+  });
 }
 
 async function adminMetric(db: Db): Promise<Response> {
@@ -556,6 +586,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (p === "/v1/admin/batch" && req.method === "POST") return adminBatch(db, req);
     if (p === "/v1/admin/content" && req.method === "POST") return adminContent(db, req);
     if (p === "/v1/admin/metric" && req.method === "GET") return adminMetric(db);
+    if (p === "/v1/admin/funnel" && req.method === "GET") return adminFunnel(db);
     if (p === "/v1/admin/close" && req.method === "POST") return json(await dayClose(db, new Date()));
     throw new HttpError(404, "not_found");
   }

@@ -14,6 +14,9 @@ echo "== tests"
 (cd "$ROOT/worker" && ./node_modules/.bin/tsc --noEmit)
 node "$ROOT/content/validate.mjs"
 
+echo "== content runway"
+node "$ROOT/content/gaps.mjs" | sed -n '/Longest runway/,$p'   # informational: never blocks a deploy
+
 echo "== bundle · $MARK"
 (cd "$ROOT/worker" && ./node_modules/.bin/wrangler deploy --dry-run --outdir dist --var BUILD:"$MARK" >/dev/null)
 
