@@ -1,0 +1,48 @@
+name: CI
+
+# Everything ops/ship.sh runs before it deploys, run on every push instead of only when someone
+# remembers. Nothing here touches Cloudflare, Supabase or App Store Connect: no secrets are needed,
+# so this is safe to run on pull requests from anywhere.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  worker:
+    name: Worker · types and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+        working-directory: worker
+      - name: Typecheck
+        run: ./node_modules/.bin/tsc --noEmit
+        working-directory: worker
+      - name: Tests
+        run: ./node_modules/.bin/vitest run
+        working-directory: worker
+      - name: Bundle (catches what typecheck cannot)
+        run: ./node_modules/.bin/wrangler deploy --dry-run --outdir /tmp/dist
+        working-directory: worker
+
+  content:
+    name: Content · units and client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Validate content units
+        run: node content/validate.mjs
+      - name: Check the hand-edited client
+        run: node ops/check-client.mjs
+      - name: Runway
+        # Informational: a short runway is a fact to see, never a reason to fail a build.
+        run: node content/gaps.mjs
