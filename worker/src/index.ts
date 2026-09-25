@@ -3,6 +3,7 @@
 
 import { Db, DbError, Env, enc } from "./db";
 import { generateCode, normaliseCode, printedForm, sha256Hex, randomToken } from "./codes";
+import { hashPassword, verifyPassword, needsRehash, normaliseEmail, passwordProblem } from "./auth";
 import {
   localTime, dayIndex, weekStartDate, firstWeekStart, visibility, nextDose, weekStartReset, closeDay, assemblePulse,
   counts, sheetComplete, cleanField, addDays, OPEN_DAY, QUESTION_DAY, ACTING_DAYS, isActingDay,
@@ -22,6 +23,7 @@ interface Pulse { id: string; article_id: string; day_index: number; observation
 interface Week { id: string; user_id: string; week_no: number; article_id: string | null; circle: Arc; trait_id: string | null; anchor_text: string | null; act_full: string | null; act_half: string | null; act_min: string | null; sign_text: string | null; started_on: string; locked_at: string | null }
 interface Entry { id: string; user_id: string; week_id: string; local_date: string; day_index: number; answer: Answer; dose_served: Dose | null; option: number | null; responded_at: string }
 interface Session { token_hash: string; book_id: string; user_id: string | null }
+interface Account { id: string; email: string; password_hash: string; failed_attempts: number; locked_until: string | null }
 
 // ---------- http helpers ----------
 
@@ -161,6 +163,74 @@ function sheetView(week: Week, article: Article | null, locked: boolean) {
 
 // ---------- endpoints ----------
 
+/** Failures before an account stops answering, and for how long. Slow enough to make guessing
+ *  pointless, short enough that a person who mistyped is not locked out of their own evening. */
+const MAX_FAILED = 8;
+const LOCK_MINUTES = 15;
+
+/** A session for a copy, returned by every door into the app. */
+async function openSession(db: Db, book: Book, accountId: string | null): Promise<{ token: string; state: string }> {
+  const token = randomToken();
+  await db.insert("sessions", { token_hash: await sha256Hex(token), book_id: book.id, user_id: book.user_id, account_id: accountId });
+  return { token, state: book.user_id ? "ready" : "entry" };
+}
+
+async function authRegister(db: Db, req: Request): Promise<Response> {
+  const b = await body<{ email?: string; password?: string; lang?: string }>(req);
+  const email = normaliseEmail(b.email);
+  if (!email) throw new HttpError(400, "bad_email");
+  const bad = passwordProblem(b.password);
+  if (bad) throw new HttpError(400, bad);
+  if (await db.one<Account>("accounts", `email=eq.${enc(email)}&select=id`)) throw new HttpError(409, "email_taken");
+
+  const lang = b.lang === "en" ? "en" : "ar";
+  const account = await db.insert<Account>("accounts", { email, password_hash: await hashPassword(String(b.password)) });
+  // Every account owns one copy, minted the same way an anonymous one used to be.
+  const book = await db.insert<Book>("books", {
+    code: generateCode(), lang, edition: "digital", batch: "account", first_scan_at: new Date().toISOString(), account_id: account.id,
+  });
+  const s = await openSession(db, book, account.id);
+  return json({ ...s, lang, email });
+}
+
+async function authLogin(db: Db, req: Request): Promise<Response> {
+  const b = await body<{ email?: string; password?: string }>(req);
+  const email = normaliseEmail(b.email);
+  // One answer for "no such account" and "wrong password", or this endpoint tells an attacker
+  // which addresses are registered.
+  const wrong = () => new HttpError(401, "bad_credentials");
+  if (!email) throw wrong();
+  const account = await db.one<Account>("accounts", `email=eq.${enc(email)}&select=*`);
+  if (!account) { await hashPassword("absorb the timing"); throw wrong(); }
+  if (account.locked_until && account.locked_until > new Date().toISOString()) throw new HttpError(429, "too_many_attempts");
+
+  if (!(await verifyPassword(String(b.password ?? ""), account.password_hash))) {
+    const n = (account.failed_attempts ?? 0) + 1;
+    await db.update("accounts", `id=eq.${account.id}`, {
+      failed_attempts: n,
+      locked_until: n >= MAX_FAILED ? new Date(Date.now() + LOCK_MINUTES * 60_000).toISOString() : null,
+    });
+    throw wrong();
+  }
+
+  const patch: Record<string, unknown> = { failed_attempts: 0, locked_until: null, last_login_at: new Date().toISOString() };
+  // Raising the cost later upgrades quietly, on the one request that already holds the password.
+  if (needsRehash(account.password_hash)) patch.password_hash = await hashPassword(String(b.password));
+  await db.update("accounts", `id=eq.${account.id}`, patch);
+
+  const book = await db.one<Book>("books", `account_id=eq.${account.id}&select=*`);
+  if (!book) throw new HttpError(500, "account_without_copy");
+  const s = await openSession(db, book, account.id);
+  return json({ ...s, lang: book.lang, email: account.email });
+}
+
+async function authLogout(db: Db, req: Request): Promise<Response> {
+  const h = req.headers.get("authorization") ?? "";
+  const token = h.startsWith("Bearer ") ? h.slice(7).trim() : "";
+  if (token) await db.del("sessions", `token_hash=eq.${enc(await sha256Hex(token))}`);
+  return new Response(null, { status: 204, headers: CORS });
+}
+
 async function sessionOpen(db: Db, req: Request): Promise<Response> {
   const b = await body<{ code?: string }>(req);
   const code = normaliseCode(b.code ?? "");
@@ -171,19 +241,6 @@ async function sessionOpen(db: Db, req: Request): Promise<Response> {
   await db.insert("sessions", { token_hash: await sha256Hex(token), book_id: book.id, user_id: book.user_id });
   if (!book.first_scan_at) await db.update("books", `id=eq.${book.id}`, { first_scan_at: new Date().toISOString() });
   return json({ token, lang: book.lang, state: book.user_id ? "ready" : "entry" });
-}
-
-/** No printed copy and no code: mint an anchor row so a session still hangs off a book, the way every
- *  handler downstream expects, and open on it. The code is generated but never shown to anyone. */
-async function sessionAnon(db: Db, req: Request): Promise<Response> {
-  const b = await body<{ lang?: string }>(req);
-  const lang = b.lang === "en" ? "en" : "ar";
-  const book = await db.insert<Book>("books", {
-    code: generateCode(), lang, edition: "digital", batch: "open", first_scan_at: new Date().toISOString(),
-  });
-  const token = randomToken();
-  await db.insert("sessions", { token_hash: await sha256Hex(token), book_id: book.id, user_id: null });
-  return json({ token, lang, state: "entry" });
 }
 
 async function entry(ctx: Ctx, req: Request, env: Env): Promise<Response> {
@@ -584,8 +641,12 @@ async function route(req: Request, env: Env): Promise<Response> {
   }
   if (!db) throw new HttpError(503, "db_unconfigured");
 
+  if (p === "/v1/auth/register" && req.method === "POST") return authRegister(db, req);
+  if (p === "/v1/auth/login" && req.method === "POST") return authLogin(db, req);
+  if (p === "/v1/auth/logout" && req.method === "POST") return authLogout(db, req);
+  // The recovery code still opens a copy: it is the way back when a password is forgotten, and the
+  // only one until there is an email provider to send a reset through.
   if (p === "/v1/session/open" && req.method === "POST") return sessionOpen(db, req);
-  if (p === "/v1/session/anon" && req.method === "POST") return sessionAnon(db, req);
 
   if (p.startsWith("/v1/admin/")) {
     requireAdmin(req, env);

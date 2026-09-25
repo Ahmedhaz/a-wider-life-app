@@ -30,6 +30,10 @@ const article = (lang: string, arc: string, week_no: number, extra: Row = {}): R
   question: "q?", options: ["a", "b", "c"], ...extra,
 });
 
+let emailSeq = 0;
+const register = (email?: string, password = "a-good-long-password") =>
+  call("/v1/auth/register", { method: "POST", body: JSON.stringify({ email: email ?? `r${++emailSeq}@x.com`, password, lang: "ar" }) });
+
 const entryBody = (circle: string) => JSON.stringify({
   timezone: "Africa/Cairo", open_day: 5,
   day_names: ["س", "ح", "ن", "ث", "ر", "خ", "ج"], witness_name: "صاحبي", circle,
@@ -55,9 +59,9 @@ describe("flags: the server offers only what it can serve", () => {
   });
 });
 
-describe("anonymous sessions", () => {
-  it("mints a copy and a session, and asks the reader to enter", async () => {
-    const { status, body } = await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) });
+describe("registration", () => {
+  it("mints an account, a copy and a session, and asks the reader to enter", async () => {
+    const { status, body } = await register();
     expect(status).toBe(200);
     expect(body.state).toBe("entry");
     expect(body.token).toBeTruthy();
@@ -66,15 +70,15 @@ describe("anonymous sessions", () => {
     expect(String(table("books")[0].code)).toHaveLength(15);
   });
   it("gives every reader a different copy", async () => {
-    const a = await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) });
-    const b = await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) });
+    const a = await register("a@x.com");
+    const b = await register("b@x.com");
     expect(a.body.token).not.toBe(b.body.token);
     expect(table("books")[0].code).not.toBe(table("books")[1].code);
   });
 });
 
 describe("a circle with no articles is refused, not silently broken", () => {
-  const open = async () => (await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) })).body.token;
+  const open = async () => (await register()).body.token;
 
   it("rejects entry into an empty circle", async () => {
     const token = await open();
@@ -102,7 +106,7 @@ describe("a circle with no articles is refused, not silently broken", () => {
 
 describe("the end of the programme is a state, not a broken week", () => {
   it("reports kind done once the arc runs out of articles", async () => {
-    const token = (await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) })).body.token;
+    const token = (await register()).body.token;
     await call("/v1/entry", { method: "POST", token, body: entryBody("home") });
     // home has one article; push the reader to a week beyond it, as the calendar would.
     table("program_state")[0].week_no = 2;
@@ -117,7 +121,7 @@ describe("the end of the programme is a state, not a broken week", () => {
 
 describe("recovery: the copy's code brings a reader back", () => {
   it("returns the code to a session that holds the copy, and restores from it", async () => {
-    const token = (await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) })).body.token;
+    const token = (await register()).body.token;
     await call("/v1/entry", { method: "POST", token, body: entryBody("self") });
 
     const rec = await call("/v1/account", { method: "POST", token, body: JSON.stringify({ action: "recovery_code" }) });
@@ -139,7 +143,7 @@ describe("recovery: the copy's code brings a reader back", () => {
   });
 
   it("will not hand the code to a session that has not entered", async () => {
-    const token = (await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) })).body.token;
+    const token = (await register()).body.token;
     const { status } = await call("/v1/account", { method: "POST", token, body: JSON.stringify({ action: "recovery_code" }) });
     expect(status).toBe(409);
   });
@@ -158,8 +162,8 @@ describe("admin", () => {
 
   it("counts the funnel within one cohort", async () => {
     // Two anonymous readers, one of whom enters; plus a print reader who must not touch the shares.
-    const a = (await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) })).body.token;
-    await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) });
+    const a = (await register()).body.token;
+    await register("second@x.com");
     await call("/v1/entry", { method: "POST", token: a, body: entryBody("self") });
     table("books").push({ id: "print-1", code: "PRINT0000000001", edition: "print", lang: "ar", batch: "b", user_id: "ghost" });
     table("users").push({ id: "ghost", lang: "ar" });
@@ -171,5 +175,92 @@ describe("admin", () => {
     expect(step("finished_entry").of_opened).toBe(50);
     expect(body.total_users_all_editions).toBe(2);
     expect(step("completed_a_sheet").n).toBe(0);       // nothing filled in yet
+  });
+});
+
+describe("the door: register and log in", () => {
+  const login = (email: string, password: string) =>
+    call("/v1/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+
+  it("refuses a bad address and a short password, creating nothing", async () => {
+    expect((await register("not-an-address")).status).toBe(400);
+    expect((await register("ok@x.com", "short")).body.code).toBe("password_too_short");
+    expect(table("accounts")).toHaveLength(0);
+  });
+
+  it("refuses a second account on the same address, whatever its case", async () => {
+    expect((await register("Ahmed@Example.com")).status).toBe(200);
+    const again = await register("ahmed@example.COM");
+    expect(again.status).toBe(409);
+    expect(again.body.code).toBe("email_taken");
+    expect(table("accounts")).toHaveLength(1);
+  });
+
+  it("never stores the password", async () => {
+    await register("keep@x.com", "the-actual-password");
+    const stored = JSON.stringify(table("accounts")[0]);
+    expect(stored).not.toContain("the-actual-password");
+    expect(String(table("accounts")[0].password_hash)).toMatch(/^pbkdf2\$\d+\$/);
+  });
+
+  it("logs in with the right password and returns the same copy", async () => {
+    const reg = await register("me@x.com", "a-good-long-password");
+    const ok = await login("ME@x.com", "a-good-long-password");   // case-insensitive
+    expect(ok.status).toBe(200);
+    expect(ok.body.token).toBeTruthy();
+    expect(ok.body.token).not.toBe(reg.body.token);               // a new session, not the old one
+    expect(table("books")).toHaveLength(1);                       // logging in does not mint a second copy
+  });
+
+  it("answers a wrong password and an unknown address identically", async () => {
+    await register("real@x.com", "a-good-long-password");
+    const wrongPw = await login("real@x.com", "not-the-password");
+    const noSuch = await login("ghost@x.com", "not-the-password");
+    expect(wrongPw.status).toBe(401);
+    expect(noSuch.status).toBe(401);
+    expect(wrongPw.body).toEqual(noSuch.body);                    // no account enumeration
+  });
+
+  it("locks an account after repeated failures, and a lock outlasts the right password", async () => {
+    await register("target@x.com", "a-good-long-password");
+    for (let i = 0; i < 8; i++) await login("target@x.com", `guess-${i}`);
+    expect(table("accounts")[0].locked_until).toBeTruthy();
+    const blocked = await login("target@x.com", "a-good-long-password");
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.code).toBe("too_many_attempts");
+  });
+
+  it("clears the failure count on a correct password", async () => {
+    await register("clears@x.com", "a-good-long-password");
+    await login("clears@x.com", "wrong");
+    expect(table("accounts")[0].failed_attempts).toBe(1);
+    await login("clears@x.com", "a-good-long-password");
+    expect(table("accounts")[0].failed_attempts).toBe(0);
+  });
+
+  it("logs out by destroying the session, and the token stops working", async () => {
+    const token = (await register()).body.token;
+    expect((await call("/v1/today", { token })).status).toBe(409);   // authenticated, just not entered
+    expect((await call("/v1/auth/logout", { method: "POST", token })).status).toBe(204);
+    expect((await call("/v1/today", { token })).status).toBe(401);
+  });
+
+  it("still lets a recovery code back in, which is the forgotten-password path", async () => {
+    const token = (await register("forgot@x.com")).body.token;
+    await call("/v1/entry", { method: "POST", token, body: entryBody("self") });
+    const code = (await call("/v1/account", { method: "POST", token, body: JSON.stringify({ action: "recovery_code" }) })).body.code;
+    const back = await call("/v1/session/open", { method: "POST", body: JSON.stringify({ code }) });
+    expect(back.status).toBe(200);
+    expect(back.body.state).toBe("ready");
+  });
+
+  it("has no anonymous door left", async () => {
+    // The path now falls through to the authenticated section, so it answers 401 rather than 404.
+    // What matters is the property, not the number: nothing is minted without credentials.
+    const { status } = await call("/v1/session/anon", { method: "POST", body: JSON.stringify({ lang: "ar" }) });
+    expect(status).not.toBe(200);
+    expect(table("sessions")).toHaveLength(0);
+    expect(table("books")).toHaveLength(0);
+    expect(table("accounts")).toHaveLength(0);
   });
 });
