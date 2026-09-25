@@ -3,7 +3,7 @@
  "short_name": "A Wider Life",
  "start_url": "/",
  "display": "standalone",
- "background_color": "#F7F4ED",
+ "background_color": "#FAF7F0",
  "theme_color": "#0E4A54",
  "icons": [
   {

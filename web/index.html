@@ -156,11 +156,75 @@ html[lang="ar"] .obs,html[lang="ar"] .dose{letter-spacing:0}
 .skel{height:17px;border-radius:8px;background:linear-gradient(90deg,var(--soft),var(--shade),var(--soft));
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* ---- splash. The mark draws itself once, the way it is built: the core lands, the line leaves it at
+   the top, turns clockwise a turn and a quarter, and stops open. It never loops: a mark that keeps
+   turning is a loading spinner, which the identity forbids. The native launch screen is plain paper
+   of this same colour, so the hand-off from the shell to this page cannot be seen. Everything here
+   rests in its finished state, so with reduced motion the lockup simply stands, then goes. ---- */
+#splash{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;
+  align-items:center;justify-content:center;padding:0 24px 6vh;text-align:center;
+  transition:opacity .32s var(--ease) .16s}
+#splash .sp-in{display:flex;flex-direction:column;align-items:center;transition:opacity .22s var(--ease)}
+/* Leaving is two beats, so the lockup and the first screen are never on the glass together:
+   the lockup lifts off the paper first, then the paper itself gives way to the page beneath. */
+#splash.out{opacity:0;pointer-events:none}
+#splash.out .sp-in{opacity:0}
+#splash svg{width:104px;height:auto;display:block;overflow:visible}
+#splash .sp-arc{fill:none;stroke:var(--teal);stroke-width:6.5;stroke-linecap:round;
+  stroke-dasharray:216 432;animation:sp-draw 1.15s cubic-bezier(.45,.05,.2,1) .18s both}
+#splash .sp-core{fill:var(--teal);transform-box:fill-box;transform-origin:center;
+  animation:sp-core .32s var(--ease) both}
+#splash .sp-name{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.3;color:var(--teal);
+  margin-top:26px;animation:rise .5s var(--ease) 1s both}
+#splash .sp-tag{font-size:14.5px;color:var(--muted);margin-top:4px;animation:fade .5s var(--ease) 1.3s both}
+/* 214.4 is the length of the line; the dash starts a hair past it so no round cap shows before the draw. */
+@keyframes sp-draw{from{stroke-dashoffset:220}to{stroke-dashoffset:0}}
+@keyframes sp-core{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in">
+  <svg viewBox="0 0 78.74 67" xmlns="http://www.w3.org/2000/svg"><path class="sp-arc" d="M33.49 27.45C35.06 26.95 36.83 26.76 38.66 26.98C40.48 27.19 42.35 27.81 44.1 28.84C45.84 29.88 47.45 31.33 48.73 33.14C50.02 34.94 50.99 37.09 51.49 39.45C51.99 41.81 52.02 44.36 51.51 46.91C50.99 49.46 49.93 52 48.34 54.3C46.75 56.6 44.63 58.65 42.1 60.24C39.57 61.83 36.63 62.95 33.49 63.45C30.35 63.95 27.01 63.82 23.73 63.01C20.46 62.19 17.25 60.69 14.4 58.54C11.55 56.4 9.05 53.61 7.16 50.36C5.27 47.1 3.99 43.38 3.49 39.45C2.99 35.52 3.27 31.4 4.39 27.4C5.5 23.4 7.45 19.52 10.16 16.12C12.86 12.71 16.31 9.77 20.29 7.58C24.27 5.39 28.78 3.95 33.49 3.45C38.2 2.95 43.11 3.39 47.84 4.8C52.57 6.22 57.1 8.62 61.07 11.87C65.03 15.13 68.42 19.25 70.91 23.95C73.4 28.66 74.99 33.95 75.49 39.45"/><circle class="sp-core" cx="33.49" cy="39.45" r="6"/></svg>
+  <div class="sp-name">حياة أوسع</div>
+  <div class="sp-tag">إنت ما بتكبرش، المساحة هي اللي بتكبر</div>
+</div></div>
 <div id="app"></div>
 <script>
+// ---------- splash ----------
+// Plays once per session: every cold start of the app, and the first open of a tab on the web (a reload
+// does not replay it). It leaves once the words have stood for HOLD and the first real screen is up,
+// whichever comes later, never holds anyone past SPLASH_MAX, and a tap skips it.
+(() => {
+  const el = document.getElementById("splash");
+  if (!el) return;
+  let seen = false;
+  try { seen = sessionStorage.getItem("awl.splash") === "1"; sessionStorage.setItem("awl.splash", "1"); } catch {}
+  if (seen) { el.remove(); return; }
+  let lang = "ar"; try { lang = localStorage.getItem("awl.lang") || "ar"; } catch {}
+  if (lang === "en") {
+    el.lang = "en"; el.dir = "ltr";
+    el.querySelector(".sp-name").textContent = "A Wider Life";
+    el.querySelector(".sp-tag").textContent = "You do not grow, the space does.";
+  }
+  const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The name and the line are fully in at 1.8 s; they stay two seconds before the first screen takes over.
+  const TEXT_IN = still ? 0 : 1800, HOLD = 2000;
+  const SPLASH_MIN = TEXT_IN + HOLD, SPLASH_MAX = SPLASH_MIN + 1500, t0 = performance.now();
+  const shell = document.getElementById("app");
+  let gone = false, watch = null;
+  const leave = () => {
+    if (gone) return; gone = true;
+    if (watch) watch.disconnect();
+    el.classList.add("out");
+    setTimeout(() => el.remove(), still ? 0 : 520);
+  };
+  // Ready means a real screen: something drawn in #app that is not the loading shimmer.
+  const check = () => { if (shell.childElementCount && !shell.querySelector(".skel") && performance.now() - t0 >= SPLASH_MIN) leave(); };
+  watch = new MutationObserver(check); watch.observe(shell, { childList: true });
+  setTimeout(check, SPLASH_MIN); setTimeout(leave, SPLASH_MAX);
+  el.addEventListener("pointerdown", leave);
+})();
+
 // A Wider Life · web client. Renders what the Worker returns; computes no rule of its own.
 // API base: `?api=https://…workers.dev` once (saved), else what was saved, else this page's own origin.
 // Inside the native shell (Capacitor) the page origin is capacitor://localhost, so the API base is the live Worker.
