@@ -75,12 +75,31 @@ function requireUser(ctx: Ctx): User {
 // ---------- programme helpers ----------
 
 function arcForWeek(order: Arc[], weekNo: number): { arc: Arc; arcWeek: number } {
-  const i = Math.min(3, Math.floor((weekNo - 1) / WEEKS_PER_ARC));
+  const i = Math.min(Math.max(order.length - 1, 0), Math.floor((weekNo - 1) / WEEKS_PER_ARC));
   return { arc: order[i], arcWeek: ((weekNo - 1) % WEEKS_PER_ARC) + 1 };
+}
+
+/** The programme order: the chosen circle first, the rest after it, wrapping. */
+function rotate(arcs: Arc[], first: Arc): Arc[] {
+  const i = arcs.indexOf(first);
+  return i < 0 ? arcs : [...arcs.slice(i), ...arcs.slice(0, i)];
 }
 
 async function articleFor(db: Db, lang: string, arc: Arc, arcWeek: number): Promise<Article | null> {
   return db.one<Article>("articles", `lang=eq.${lang}&arc=eq.${arc}&week_no=eq.${arcWeek}&select=*`);
+}
+
+/** Arcs with at least one article in this language, in programme order. Never offer what cannot be served. */
+async function availableArcs(db: Db, lang: string): Promise<Arc[]> {
+  const rows = await db.select<{ arc: Arc }>("articles", `lang=eq.${enc(lang)}&select=arc`);
+  const have = new Set(rows.map((r) => r.arc));
+  return ARCS.filter((a) => have.has(a));
+}
+
+/** Languages with at least one article. The UI hides a language it cannot serve. */
+async function availableLangs(db: Db): Promise<string[]> {
+  const rows = await db.select<{ lang: string }>("articles", `select=lang`);
+  return [...new Set(rows.map((r) => r.lang))].sort();
 }
 
 /** Load state and the current week; start a new week when the reader's local calendar says so. */
@@ -132,7 +151,8 @@ function resourcesFor(user: User, env: Env) {
 
 function sheetView(week: Week, article: Article | null, locked: boolean) {
   return {
-    week_no: week.week_no, circle: week.circle, trait_id: week.trait_id, anchor_text: week.anchor_text,
+    week_no: week.week_no, circle: week.circle, trait_id: week.trait_id,
+    trait_label: article?.title ?? null, done: !article, anchor_text: week.anchor_text,
     act_full: week.act_full, act_half: week.act_half, act_min: week.act_min, sign_text: week.sign_text,
     locked, started_on: week.started_on,
     article: article ? { id: article.id, title: article.title, trait_id: article.trait_id, body_md: article.body_md, act_full: article.act_full, act_half: article.act_half, act_min: article.act_min, sign_hint: article.sign_hint } : null,
@@ -178,6 +198,7 @@ async function entry(ctx: Ctx, req: Request, env: Env): Promise<Response> {
   const circle = (b.circle ?? "self") as Arc;
   if (!ARCS.includes(circle)) throw new HttpError(400, "bad_circle");
   if (!countryOf(timezone) && env.DEV_OPEN_ALL_COUNTRIES !== "true") throw new HttpError(451, "country_not_open");
+  if (!(await availableArcs(ctx.db, ctx.book.lang)).includes(circle)) throw new HttpError(400, "circle_unavailable");
 
   const local = localTime(ctx.now, timezone);
   // No week starts without a sheet (PRD section 6): the first week begins on the reader's next first day.
@@ -187,8 +208,7 @@ async function entry(ctx: Ctx, req: Request, env: Env): Promise<Response> {
     book_id: ctx.book.id, lang: ctx.book.lang, timezone, open_day: openDay, day_names: names,
     witness_name: cleanField(b.witness_name), first_local_date: start,
   });
-  const i = ARCS.indexOf(circle);
-  const order = [...ARCS.slice(i), ...ARCS.slice(0, i)];
+  const order = rotate(await availableArcs(ctx.db, user.lang), circle);
   await ctx.db.insert("program_state", { user_id: user.id, arc: circle, arc_order: order, week_no: 1 });
   const art = await articleFor(ctx.db, user.lang, circle, 1);
   await ctx.db.insert("weeks", { user_id: user.id, week_no: 1, article_id: art?.id ?? null, circle, trait_id: art?.trait_id ?? null, started_on: start });
@@ -221,8 +241,8 @@ async function today(ctx: Ctx, env: Env): Promise<Response> {
     ? { open_day: user.day_names[6], witness: user.witness_name } : null;
   return json({
     local: { date: local.date, hour: local.hour },
-    week_no: week.week_no, day: vis.today,
-    kind: before ? "before" : vis.today === OPEN_DAY ? "open" : vis.today === QUESTION_DAY ? "question" : vis.today === 1 ? "first" : "act",
+    week_no: week.week_no, day: vis.today, status: user.status,
+    kind: !article && !before ? "done" : before ? "before" : vis.today === OPEN_DAY ? "open" : vis.today === QUESTION_DAY ? "question" : vis.today === 1 ? "first" : "act",
     starts_on: before ? week.started_on : null,
     dose: state.dose, answered: todayEntry?.answer ?? null, answerable: vis.answerable && !todayEntry && user.status === "active",
     sheet_complete: sheetComplete(week), sheet_locked: vis.sheetLocked,
@@ -307,8 +327,9 @@ async function weekPut(ctx: Ctx, req: Request): Promise<Response> {
     const c = b.circle as Arc;
     if (!ARCS.includes(c)) throw new HttpError(400, "bad_circle");
     // moving to week 1 of another circle: the programme order rotates to start there
-    const i = ARCS.indexOf(c);
-    const order = [...ARCS.slice(i), ...ARCS.slice(0, i)];
+    const avail = await availableArcs(ctx.db, user.lang);
+    if (!avail.includes(c)) throw new HttpError(400, "circle_unavailable");
+    const order = rotate(avail, c);
     const art = await articleFor(ctx.db, user.lang, c, 1);
     await ctx.db.update("program_state", `user_id=eq.${user.id}`, { arc: c, arc_order: order });
     patch.circle = c; patch.trait_id = art?.trait_id ?? null; patch.article_id = art?.id ?? null;
@@ -340,8 +361,16 @@ async function notebook(ctx: Ctx, env: Env): Promise<Response> {
   const entries = await ctx.db.select<Entry>("entries", `user_id=eq.${user.id}&local_date=gte.${since}&select=local_date,day_index,answer&order=local_date.asc`);
   const all = await ctx.db.select<Entry>("entries", `user_id=eq.${user.id}&select=local_date,answer`);
   const c = counts(all, user.first_local_date, local.date, user.open_day);
-  const weeks = await ctx.db.select<Week>("weeks", `user_id=eq.${user.id}&select=week_no,circle,trait_id,started_on&order=week_no.desc`);
-  return json({ count: c, current_week: week.week_no, grid: entries, weeks, resources: resourcesFor(user, env) });
+  const weeks = await ctx.db.select<Week>("weeks", `user_id=eq.${user.id}&select=week_no,circle,trait_id,article_id,started_on&order=week_no.desc`);
+  // The reader sees the article's title, never the trait slug.
+  const ids = [...new Set(weeks.map((w) => (w as unknown as { article_id: string | null }).article_id).filter(Boolean))] as string[];
+  const arts = ids.length ? await ctx.db.select<Article>("articles", `id=in.(${ids.join(",")})&select=id,title`) : [];
+  const titleOf = new Map(arts.map((a) => [a.id, a.title]));
+  const weekList = weeks.map((w) => {
+    const { article_id, ...rest } = w as unknown as { article_id: string | null } & Record<string, unknown>;
+    return { ...rest, trait_label: article_id ? titleOf.get(article_id) ?? null : null };
+  });
+  return json({ count: c, current_week: week.week_no, grid: entries, weeks: weekList, resources: resourcesFor(user, env) });
 }
 
 async function weekPast(ctx: Ctx, n: number): Promise<Response> {
@@ -488,7 +517,13 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (p === "/__build") return new Response(env.BUILD ?? "dev", { headers: { "content-type": "text/plain", ...CORS } });
   // What the native shell may switch on. Public, no secrets, no database.
-  if (p === "/v1/flags") return json({ notify: env.NOTIFY_ENABLED === "true" });
+  if (p === "/v1/flags") {
+    const db0 = Db.from(env);
+    const lang = new URL(req.url).searchParams.get("lang") === "en" ? "en" : "ar";
+    // No database configured: say so with empty lists rather than 500. The client falls back to asking nothing.
+    const [circles, langs] = db0 ? await Promise.all([availableArcs(db0, lang), availableLangs(db0)]) : [[], []];
+    return json({ notify: env.NOTIFY_ENABLED === "true", circles, langs });
+  }
   // The privacy policy lives in the assets (web/privacy.html); the store listing links to /privacy.
   if (p === "/privacy" && env.ASSETS) return env.ASSETS.fetch(new Request(new URL("/privacy.html", req.url).toString(), { headers: req.headers }));
   // Universal Links: iOS fetches this once per install; /k/<code> then opens the app when it is installed.

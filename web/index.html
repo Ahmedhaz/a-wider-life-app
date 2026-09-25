@@ -51,6 +51,12 @@ video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#
 .res{font-size:12px;color:var(--teal);text-align:center;text-decoration:underline;margin-top:8px}
 .err{color:#8A3B2E;font-size:13px}
 textarea.input{resize:none;height:44px}
+.skel{height:16px;border-radius:6px;background:linear-gradient(90deg,var(--soft),var(--shade),var(--soft));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--teal);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-weight:600;padding:11px;border:0;background:var(--paper);color:var(--teal);cursor:pointer}
+.seg button.on{background:var(--teal);color:#fff}
+select.input{appearance:none}
 </style>
 </head>
 <body>
@@ -69,9 +75,10 @@ const API = (() => {
   return saved || (NATIVE ? PROD_API : location.origin);
 })();
 const T = {
-  ar: { quotes:"أقوال ابن عربي", quotesHint:"قول كل ٣ ساعات، من ١٠ صباحاً حتى ٢ بعد منتصف الليل.", on:"مفعّل", off:"متوقف", nativeOnly:"في التطبيق فقط", noPerm:"لازم تسمح بالإشعارات من إعدادات النظام.", offline:"ما قدرناش نوصل للخدمة. جرب تاني.", retry:"جرب تاني", before:"قبل ما تبدأ", tz:"منطقتك الزمنية", tzHint:"جبناها من جهازك. لو صح اضغط تمام.", ok:"تمام", openDay:"يومك المفتوح اسمه إيه؟", openHint:"يوم في الأسبوع مفيهوش مطلوب. سمّيه مرة، وما تنقلوش كل أسبوع.", who:"هتقوله لمين؟", whoHint:"اسم واحد بس. التطبيق مش هيبعتله حاجة، ده ليك إنت.", next:"كمّل", circle:"هتبدأ من أنهي دايرة؟", start:"ابدأ", week:"الأسبوع", day:"اليوم", notebook:"الدفتر", settings:"الإعدادات", sheet:"صفحة الأسبوع", f1:"أنا فين دلوقتي", f2:"بشتغل على إيه", f3:"الحدث اللي هعلّق عليه", f3h:"حاجة بتحصل في يومي أصلاً، وأنا اللي بختاره", f4:"الفعل بتلات جرعات", f4h:"أقل حاجة نفس الفعل أصغر، مش فعل تاني أسهل", full:"الكاملة", half:"النص", min:"أقل حاجة", f5:"العلامة", f5h:"حاجة تلاحظها، مش حاجة تعدّها", f6:"الأسبوع", save:"احفظ الورقة", pin:"ثبّت فعل المقال في ورقتي", locked:"الورقة اتقفلت. الفعل ما بيتغيّرش في نص الأسبوع، الجرعة هي اللي بتتغيّر.", foot:"عدّاد مش سلسلة · ومفيش خانة للفشل", says:"حياة أوسع النهاردة بتقولك", obs:"الملاحظة", actL:"الفعل", sign:"العلامة", tapAfter:"اضغط بعد ما تعمله، مش قبل", done:"تم", smaller:"أصغر", doseL:"الجرعة", first:"أول يوم في الأسبوع: اقرا المقال واملا ورقتك.", openK:"مفتوح", questionK:"سؤال", beforeStart:"أسبوعك الأول بيبدأ يوم {d} ({on}). لحد ساعتها اقرا المقال واملا ورقتك على مهلك، ومفيش حاجة بتتعدّ.", question:"سؤال واحد. قف عنده دقيقة.", noRight:"مفيش إجابة صح. الإجابة بتتكتب زي ما هي.", incomplete:"الورقة لسه ناقصة: الدايرة والخصلة والحدث والفعل الكامل.", witness:"يومك المفتوح {d}، وقلت لـ{w}.", moved:"{p} يوم، اتحركت في {m}", pause:"إيقاف مؤقت", resume:"استئناف", startOver:"بداية جديدة", del:"حذف الحساب", resources:"موارد بلدك", circles:{self:"نفسي",home:"بيتي",work:"شغلي",people:"ناسي"}, doses:{full:"الكاملة",half:"النص",min:"أقل حاجة"}, sure:"متأكد؟ ده بيمسح كل حاجة على النسخة دي.", tomorrow:"نبضة بكرة، اسمعها الليلة واعملها الصبح" },
-  en: { quotes:"Ibn Arabi quotes", quotesHint:"One saying every three hours, from 10am to 2am.", on:"On", off:"Off", nativeOnly:"App only", noPerm:"Allow notifications in system settings.", offline:"We could not reach the service. Try again.", retry:"Try again", before:"Before you start", tz:"Your time zone", tzHint:"We took it from your device. If it is right, tap OK.", ok:"OK", openDay:"What is your open day called?", openHint:"One day a week with nothing required. Name it once, and do not move it every week.", who:"Who will you tell?", whoHint:"One name only. The app will never message them. This is for you.", next:"Continue", circle:"Which circle will you start from?", start:"Start", week:"Week", day:"Day", notebook:"Notebook", settings:"Settings", sheet:"THE WEEK SHEET", f1:"Where I am now", f2:"What I am working on", f3:"What it hangs on", f3h:"something that happens in my day anyway, and I choose it", f4:"The act, in three doses", f4h:"the smallest is the same act made smaller, not an easier one", full:"Full", half:"Half", min:"Smallest", f5:"The sign", f5h:"something you would notice, not something you count", f6:"The week", save:"Save the sheet", pin:"Pin the article's act to my sheet", locked:"The sheet is locked. The act does not change mid-week; the dose does.", foot:"A counter, not a chain. There is no box for failure.", says:"A Wider Life says today", obs:"Where you are", actL:"The act", sign:"The sign", tapAfter:"Tap after you do it, not before", done:"Done", smaller:"Smaller", doseL:"Dose", first:"First day of the week: read the article and fill your sheet.", openK:"open", questionK:"question", beforeStart:"Your first week starts on {d} ({on}). Until then, read the article and fill your sheet at your own pace. Nothing is counted yet.", question:"One question. Stay with it for a minute.", noRight:"There is no right answer. It is written down as it is.", incomplete:"The sheet is not complete yet: circle, trait, anchor and the full act.", witness:"Your open day is {d}, and you told {w}.", moved:"{p} days. You moved on {m}.", pause:"Pause", resume:"Resume", startOver:"Start over", del:"Delete account", resources:"Your country's resources", circles:{self:"Myself",home:"My home",work:"My work",people:"My people"}, doses:{full:"Full",half:"Half",min:"Smallest"}, sure:"Sure? This wipes everything on this copy.", tomorrow:"Tomorrow's pulse. Hear it tonight, do it in the morning" },
+  ar: { language:"اللغة", rhythm:"الإيقاع", active:"شغّال", paused:"متوقف مؤقتاً", pauseHint:"وقّف لما تحتاج. العدّاد بيستنّاك، وما بيتصفّرش.", oneCircle:"الدواير التانية لسه بتتكتب.", doneHint:"خلصت اللي مكتوب لحد دلوقتي. الورق والدفتر باقيين معاك.", quotes:"أقوال ابن عربي", quotesHint:"قول كل ٣ ساعات، من ١٠ صباحاً حتى ٢ بعد منتصف الليل.", on:"مفعّل", off:"متوقف", nativeOnly:"في التطبيق فقط", noPerm:"لازم تسمح بالإشعارات من إعدادات النظام.", offline:"ما قدرناش نوصل للخدمة. جرب تاني.", retry:"جرب تاني", before:"قبل ما تبدأ", tz:"منطقتك الزمنية", tzHint:"جبناها من جهازك. لو صح اضغط تمام.", ok:"تمام", openDay:"يومك المفتوح اسمه إيه؟", openHint:"يوم في الأسبوع مفيهوش مطلوب. سمّيه مرة، وما تنقلوش كل أسبوع.", who:"هتقوله لمين؟", whoHint:"اسم واحد بس. التطبيق مش هيبعتله حاجة، ده ليك إنت.", next:"كمّل", circle:"هتبدأ من أنهي دايرة؟", start:"ابدأ", week:"الأسبوع", day:"اليوم", notebook:"الدفتر", settings:"الإعدادات", sheet:"صفحة الأسبوع", f1:"أنا فين دلوقتي", f2:"بشتغل على إيه", f3:"الحدث اللي هعلّق عليه", f3h:"حاجة بتحصل في يومي أصلاً، وأنا اللي بختاره", f4:"الفعل بتلات جرعات", f4h:"أقل حاجة نفس الفعل أصغر، مش فعل تاني أسهل", full:"الكاملة", half:"النص", min:"أقل حاجة", f5:"العلامة", f5h:"حاجة تلاحظها، مش حاجة تعدّها", f6:"الأسبوع", save:"احفظ الورقة", pin:"ثبّت فعل المقال في ورقتي", locked:"الورقة اتقفلت. الفعل ما بيتغيّرش في نص الأسبوع، الجرعة هي اللي بتتغيّر.", foot:"عدّاد مش سلسلة · ومفيش خانة للفشل", says:"حياة أوسع النهاردة بتقولك", obs:"الملاحظة", actL:"الفعل", sign:"العلامة", tapAfter:"اضغط بعد ما تعمله، مش قبل", done:"تم", smaller:"أصغر", doseL:"الجرعة", first:"أول يوم في الأسبوع: اقرا المقال واملا ورقتك.", openK:"مفتوح", questionK:"سؤال", beforeStart:"أسبوعك الأول بيبدأ يوم {d} ({on}). لحد ساعتها اقرا المقال واملا ورقتك على مهلك، ومفيش حاجة بتتعدّ.", question:"سؤال واحد. قف عنده دقيقة.", noRight:"مفيش إجابة صح. الإجابة بتتكتب زي ما هي.", incomplete:"الورقة لسه ناقصة: الدايرة والخصلة والحدث والفعل الكامل.", witness:"يومك المفتوح {d}، وقلت لـ{w}.", moved:"{p} يوم، اتحركت في {m}", pause:"إيقاف مؤقت", resume:"استئناف", startOver:"بداية جديدة", del:"حذف الحساب", resources:"موارد بلدك", circles:{self:"نفسي",home:"بيتي",work:"شغلي",people:"ناسي"}, doses:{full:"الكاملة",half:"النص",min:"أقل حاجة"}, sure:"متأكد؟ ده بيمسح كل حاجة على النسخة دي.", tomorrow:"نبضة بكرة، اسمعها الليلة واعملها الصبح" },
+  en: { language:"Language", rhythm:"Rhythm", active:"Running", paused:"Paused", pauseHint:"Pause when you need to. The counter waits, and never resets.", oneCircle:"The other circles are still being written.", doneHint:"You have reached the end of what is written. Your sheets and notebook stay with you.", quotes:"Ibn Arabi quotes", quotesHint:"One saying every three hours, from 10am to 2am.", on:"On", off:"Off", nativeOnly:"App only", noPerm:"Allow notifications in system settings.", offline:"We could not reach the service. Try again.", retry:"Try again", before:"Before you start", tz:"Your time zone", tzHint:"We took it from your device. If it is right, tap OK.", ok:"OK", openDay:"What is your open day called?", openHint:"One day a week with nothing required. Name it once, and do not move it every week.", who:"Who will you tell?", whoHint:"One name only. The app will never message them. This is for you.", next:"Continue", circle:"Which circle will you start from?", start:"Start", week:"Week", day:"Day", notebook:"Notebook", settings:"Settings", sheet:"THE WEEK SHEET", f1:"Where I am now", f2:"What I am working on", f3:"What it hangs on", f3h:"something that happens in my day anyway, and I choose it", f4:"The act, in three doses", f4h:"the smallest is the same act made smaller, not an easier one", full:"Full", half:"Half", min:"Smallest", f5:"The sign", f5h:"something you would notice, not something you count", f6:"The week", save:"Save the sheet", pin:"Pin the article's act to my sheet", locked:"The sheet is locked. The act does not change mid-week; the dose does.", foot:"A counter, not a chain. There is no box for failure.", says:"A Wider Life says today", obs:"Where you are", actL:"The act", sign:"The sign", tapAfter:"Tap after you do it, not before", done:"Done", smaller:"Smaller", doseL:"Dose", first:"First day of the week: read the article and fill your sheet.", openK:"open", questionK:"question", beforeStart:"Your first week starts on {d} ({on}). Until then, read the article and fill your sheet at your own pace. Nothing is counted yet.", question:"One question. Stay with it for a minute.", noRight:"There is no right answer. It is written down as it is.", incomplete:"The sheet is not complete yet: circle, trait, anchor and the full act.", witness:"Your open day is {d}, and you told {w}.", moved:"{p} days. You moved on {m}.", pause:"Pause", resume:"Resume", startOver:"Start over", del:"Delete account", resources:"Your country's resources", circles:{self:"Myself",home:"My home",work:"My work",people:"My people"}, doses:{full:"Full",half:"Half",min:"Smallest"}, sure:"Sure? This wipes everything on this copy.", tomorrow:"Tomorrow's pulse. Hear it tonight, do it in the morning" },
 };
+let FLAGS = null;
 const S = { token: localStorage.getItem("awl.token"), lang: localStorage.getItem("awl.lang") || "ar", screen: "door", data: null, err: null };
 const t = () => T[S.lang];
 const app = document.getElementById("app");
@@ -84,7 +91,7 @@ async function api(path, opts = {}) {
   return data;
 }
 
-function setLang(l) { S.lang = l; localStorage.setItem("awl.lang", l); document.documentElement.lang = l; document.documentElement.dir = l === "ar" ? "rtl" : "ltr"; }
+function setLang(l) { if (l !== S.lang) FLAGS = null; S.lang = l; localStorage.setItem("awl.lang", l); document.documentElement.lang = l; document.documentElement.dir = l === "ar" ? "rtl" : "ltr"; }
 setLang(S.lang);
 
 function nav(active) {
@@ -92,7 +99,25 @@ function nav(active) {
   return `<div class="nav">${[["week", x.week], ["day", x.day], ["notebook", x.notebook], ["settings", x.settings]].map(([k, l]) => `<button class="${active === k ? "on" : ""}" data-go="${k}">${l}</button>`).join("")}</div>`;
 }
 function topBar(title, sub = "") { return `<div class="top"><div class="t">${h(title)}</div><div class="w">${h(sub)}</div></div>`; }
+// A real zone list beats free text: one typo used to be enough to break every date rule in the engine.
+const ZONES = (() => {
+  try { const all = Intl.supportedValuesOf("timeZone"); if (all && all.length) return all; } catch {}
+  return ["Africa/Cairo", "Asia/Riyadh", "Asia/Dubai", "Europe/London", "America/New_York", "UTC"];
+})();
+function zoneOptions(sel) {
+  const list = ZONES.includes(sel) ? ZONES : [sel, ...ZONES];
+  return list.map((z) => `<option value="${h(z)}" ${z === sel ? "selected" : ""}>${h(z.replace(/_/g, " "))}</option>`).join("");
+}
+const fmtDate = (iso) => { try { return new Intl.DateTimeFormat(S.lang === "ar" ? "ar-EG" : "en-GB", { day: "numeric", month: "long" }).format(new Date(iso + "T00:00:00")); } catch { return iso; } };
 const errLine = () => S.err ? `<div class="err">${h(S.err)}</div>` : "";
+// Something on screen while a request is in flight. Drawn only when the app is otherwise empty, so
+// moving between tabs keeps the current screen rather than flashing.
+function busy(title) {
+  if (app.innerHTML.trim() && !app.dataset.busy) return;
+  app.dataset.busy = "1";
+  app.innerHTML = topBar(title || "") + `<div class="body"><div class="skel"></div><div class="skel"></div><div class="skel" style="width:60%"></div></div>`;
+}
+const unbusy = () => { delete app.dataset.busy; };
 
 // ---------- screens ----------
 // No code and no door: the first open mints an anonymous session and goes straight in.
@@ -116,16 +141,20 @@ function unreachable() {
   bind();
 }
 
-function entry(step = 1, st = { tz: Intl.DateTimeFormat().resolvedOptions().timeZone, open: 5, names: null, witness: "", circle: "self" }) {
+async function entry(step = 1, st = { tz: Intl.DateTimeFormat().resolvedOptions().timeZone, open: 5, names: null, witness: "", circle: null }) {
   const x = t();
+  const f = await flags();
+  const circles = (f.circles || []).length ? f.circles : ["self"];
+  if (!st.circle || !circles.includes(st.circle)) st.circle = circles[0];
+  unbusy();
   const DAYS = S.lang === "ar" ? ["الأحد", "الاتنين", "التلات", "الأربع", "الخميس", "الجمعة", "السبت"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   if (st.open === 5 && S.lang === "en") st.open = 0;
   let inner = "";
-  if (step === 1) inner = `<div class="lab">${x.tz}</div><div class="hint">${x.tzHint}</div><input class="input" id="tz" value="${h(st.tz)}"><div style="margin-top:auto"></div><button class="btn fill" id="n">${x.ok}</button>`;
+  if (step === 1) inner = `<div class="lab">${x.tz}</div><div class="hint">${x.tzHint}</div><select class="input" id="tz">${zoneOptions(st.tz)}</select><div style="margin-top:auto"></div><button class="btn fill" id="n">${x.ok}</button>`;
   if (step === 2) inner = `<div class="lab">${x.openDay}</div><div class="hint">${x.openHint}</div><div class="chips">${DAYS.map((d, i) => `<button class="chip ${i === st.open ? "on" : ""}" data-d="${i}">${d}</button>`).join("")}</div>
     <div class="lab" style="margin-top:10px">${x.who}</div><div class="hint">${x.whoHint}</div><input class="input" id="wit" value="${h(st.witness)}"><div style="margin-top:auto"></div><button class="btn fill" id="n">${x.next}</button>`;
-  if (step === 3) inner = `<div class="lab">${x.circle}</div><div class="chips">${Object.entries(x.circles).map(([k, l]) => `<button class="chip ${k === st.circle ? "on" : ""}" data-c="${k}">${l}</button>`).join("")}</div>${errLine()}<div style="margin-top:auto"></div><button class="btn fill" id="n">${x.start}</button>`;
-  app.innerHTML = topBar(x.before, `${step} / 3`) + `<div class="body">${inner}</div>`;
+  if (step === 3) inner = `<div class="lab">${x.circle}</div><div class="chips">${circles.map((k) => `<button class="chip ${k === st.circle ? "on" : ""}" data-c="${k}">${x.circles[k]}</button>`).join("")}</div>${circles.length === 1 ? `<div class="hint">${x.oneCircle}</div>` : ""}${errLine()}<div style="margin-top:auto"></div><button class="btn fill" id="n">${x.start}</button>`;
+  app.innerHTML = topBar(x.before, `\u200e${step} / 3`) + `<div class="body">${inner}</div>`;
   app.querySelectorAll("[data-d]").forEach((b) => b.onclick = () => { st.open = +b.dataset.d; entry(2, st); });
   app.querySelectorAll("[data-c]").forEach((b) => b.onclick = () => { st.circle = b.dataset.c; entry(3, st); });
   document.getElementById("n").onclick = async () => {
@@ -144,13 +173,14 @@ const pulseHtml = (p, x) => `<div class="k">${x.obs}</div><div class="obs">${h(p
   <div class="k">${x.sign}</div><div>${h(p.sign)}</div>`;
 
 async function day() {
-  const x = t(); let d;
+  const x = t(); busy(x.day); let d;
   try { d = await api("/v1/today"); } catch (e) { if (e.status === 409 && e.message === "entry_incomplete") return entry(); if (e.status === 401) { localStorage.removeItem("awl.token"); S.token = null; return openAnon(); } S.err = String(e.message); }
-  if (!d) { app.innerHTML = topBar(x.day) + `<div class="body">${errLine()}</div>` + nav("day"); return bind(); }
+  unbusy(); if (!d) { app.innerHTML = topBar(x.day) + `<div class="body">${errLine()}</div>` + nav("day"); return bind(); }
   let inner = "";
-  if (d.kind === "open") inner = `<div class="shade"></div>`;
+  if (d.kind === "done") inner = `<div class="brand" style="margin-top:0">${S.lang === "ar" ? "حياة أوسع" : "A Wider Life"}</div><div class="hint" style="text-align:center">${x.doneHint}</div><button class="btn" data-go="notebook">${x.notebook}</button>`;
+  else if (d.kind === "open") inner = `<div class="shade"></div>`;
   else if (d.kind === "question") inner = `<div class="hint">${x.question}</div><div class="act">${h(d.question?.text || "")}</div>${(d.question?.options || []).map((o, i) => `<button class="btn q" data-q="${i}" ${d.answered ? "disabled" : ""}>${h(o)}</button>`).join("")}<div class="hint">${x.noRight}</div>`;
-  else if (d.kind === "before") inner = `<div class="hint">${x.beforeStart.replace("{d}", h(d.strip[0]?.name || "")).replace("{on}", h(d.starts_on || ""))}</div>${d.witness ? `<div class="hint">${x.witness.replace("{d}", h(d.witness.open_day)).replace("{w}", h(d.witness.witness))}</div>` : ""}${d.first ? `<div class="act">${h(d.first.title)}</div><div class="k">${x.f4}</div><div>${h(d.first.act_full)} · ${h(d.first.act_half)} · ${h(d.first.act_min)}</div>` : ""}<button class="btn" data-go="week">${x.sheet}</button>`;
+  else if (d.kind === "before") inner = `<div class="hint">${x.beforeStart.replace("{d}", h(d.strip[0]?.name || "")).replace("{on}", h(fmtDate(d.starts_on || "")))}</div>${d.witness ? `<div class="hint">${x.witness.replace("{d}", h(d.witness.open_day)).replace("{w}", h(d.witness.witness))}</div>` : ""}${d.first ? `<div class="act">${h(d.first.title)}</div><div class="k">${x.f4}</div><div>${h(d.first.act_full)} · ${h(d.first.act_half)} · ${h(d.first.act_min)}</div>` : ""}<button class="btn" data-go="week">${x.sheet}</button>`;
   else if (d.kind === "first") inner = `<div class="hint">${x.first}</div>${d.witness ? `<div class="hint">${x.witness.replace("{d}", h(d.witness.open_day)).replace("{w}", h(d.witness.witness))}</div>` : ""}${d.first ? `<div class="act">${h(d.first.title)}</div><div class="k">${x.f4}</div><div>${h(d.first.act_full)} · ${h(d.first.act_half)} · ${h(d.first.act_min)}</div>` : ""}<button class="btn" data-go="week">${x.sheet}</button>${d.next?.pulse ? `<div class="hint" style="margin-top:14px">${x.tomorrow}</div>${pulseHtml(d.next.pulse, x)}` : ""}`;
   else inner = `<div class="hint">${x.says}</div>${d.pulse ? pulseHtml(d.pulse, x) : `<div class="hint">${x.incomplete}</div>`}
     ${d.answerable && d.pulse ? `<div class="hint" style="text-align:center;margin-top:auto">${x.tapAfter}</div><div class="two"><button class="btn fill" data-a="done">${x.done}</button><button class="btn" data-a="smaller">${x.smaller}</button></div>` : ""}
@@ -162,15 +192,18 @@ async function day() {
 }
 
 async function week() {
-  const x = t(); let w;
+  const x = t(); busy(x.sheet);
+  const cf = await flags();
+  const circles = (cf.circles || []).length ? cf.circles : ["self"];
+  let w;
   try { w = await api("/v1/week"); } catch (e) { if (e.status === 409) return entry(); if (e.status === 401) { localStorage.removeItem("awl.token"); S.token = null; return openAnon(); } S.err = String(e.message); }
-  if (!w) { app.innerHTML = topBar(x.sheet) + `<div class="body">${errLine()}</div>` + nav("week"); return bind(); }
+  unbusy(); if (!w) { app.innerHTML = topBar(x.sheet) + `<div class="body">${errLine()}</div>` + nav("week"); return bind(); }
   const ro = w.locked ? "disabled" : "";
   const f = (k, v, hint) => `<div class="lab">${k}</div>${hint ? `<div class="hint">${hint}</div>` : ""}<input class="input" data-f="${v}" value="${h(w[v] || "")}" ${ro} maxlength="140">`;
   app.innerHTML = topBar(x.sheet, `${x.week} ${w.week_no}`) + `<div class="body">
     ${w.article ? `<div class="act">${h(w.article.title)}</div><details><summary class="hint">${S.lang === "ar" ? "المقال" : "The article"}</summary><div>${h(w.article.body_md)}</div></details>` : ""}
-    <div class="lab">${x.f1}</div><div class="chips">${Object.entries(x.circles).map(([k, l]) => `<button class="chip ${k === w.circle ? "on" : ""}" data-circle="${k}" ${ro}>${l}</button>`).join("")}</div>
-    <div class="lab">${x.f2}</div><div>${h(w.trait_id || "")}</div>
+    <div class="lab">${x.f1}</div><div class="chips">${circles.map((k) => `<button class="chip ${k === w.circle ? "on" : ""}" data-circle="${k}" ${ro}>${x.circles[k]}</button>`).join("")}</div>
+    <div class="lab">${x.f2}</div><div>${h(w.trait_label || w.trait_id || "")}</div>
     ${f(x.f3, "anchor_text", x.f3h)}
     <div class="lab">${x.f4}</div><div class="hint">${x.f4h}</div>
     ${f(x.full, "act_full")}${f(x.half, "act_half")}${f(x.min, "act_min")}
@@ -186,23 +219,28 @@ async function week() {
 }
 
 async function notebook() {
-  const x = t(); let n;
+  const x = t(); busy(x.notebook); let n;
   try { n = await api("/v1/notebook"); } catch (e) { if (e.status === 401) { localStorage.removeItem("awl.token"); S.token = null; return openAnon(); } if (e.status === 409) return entry(); S.err = String(e.message); }
-  if (!n) { app.innerHTML = topBar(x.notebook) + `<div class="body">${errLine()}</div>` + nav("notebook"); return bind(); }
+  unbusy(); if (!n) { app.innerHTML = topBar(x.notebook) + `<div class="body">${errLine()}</div>` + nav("notebook"); return bind(); }
   const grid = n.grid.map((e) => `<div class="${e.answer === "empty" ? "" : ""}">${e.answer === "done" ? "●" : e.answer === "smaller" ? "◐" : e.answer === "question" ? "?" : ""}</div>`).join("");
   app.innerHTML = topBar(x.notebook) + `<div class="body"><div class="count">${x.moved.replace("{p}", n.count.passed).replace("{m}", n.count.moved)}</div><div class="grid">${grid}</div>
-    ${n.weeks.map((w) => `<div class="row"><span>${x.week} ${w.week_no} · ${x.circles[w.circle] || w.circle} · ${h(w.trait_id || "")}</span><span>${w.week_no === n.current_week ? (S.lang === "ar" ? "الأسبوع ده" : "This week") : "›"}</span></div>`).join("")}
+    ${n.weeks.map((w) => `<div class="row"><span>${x.week} ${w.week_no} · ${x.circles[w.circle] || w.circle} · ${h(w.trait_label || w.trait_id || "")}</span><span>${w.week_no === n.current_week ? (S.lang === "ar" ? "الأسبوع ده" : "This week") : "›"}</span></div>`).join("")}
     ${n.resources ? `<div class="res">${x.resources}: ${h(n.resources.name)} ${h(n.resources.number)}</div>` : ""}</div>` + nav("notebook");
   bind();
 }
 
 async function settings() {
-  const x = t();
+  const x = t(); busy(t().settings);
+  let st = null; try { st = (await api("/v1/today")).status; } catch {}
+  const f = await flags(); const langs = (f.langs || []).length ? f.langs : [S.lang];
+  unbusy();
   app.innerHTML = topBar(x.settings) + `<div class="body">
-    <div class="row"><span>API</span><span style="direction:ltr">${h(API)}</span></div>
+    ${langs.length > 1 ? `<div class="row"><span>${x.language}</span><button class="chip" data-lang="${S.lang === "ar" ? "en" : "ar"}">${S.lang === "ar" ? "English" : "عربي"}</button></div>` : ""}
     <div class="row"><span>${x.quotes}</span><button class="chip" id="qt">${notifOn() ? x.on : x.off}</button></div>
     <div class="hint">${x.quotesHint}</div>
-    <button class="btn" id="pause">${x.pause}</button><button class="btn" id="resume">${x.resume}</button>
+    <div class="lab">${x.rhythm}</div>
+    <div class="seg"><button id="resume" class="${st === "active" ? "on" : ""}">${x.active}</button><button id="pause" class="${st === "paused" ? "on" : ""}">${x.paused}</button></div>
+    <div class="hint">${x.pauseHint}</div>
     <div style="margin-top:auto"></div>
     <button class="btn" id="so">${x.startOver}</button><button class="btn" id="del">${x.del}</button>${errLine()}</div>` + nav("settings");
   const act = (action) => async () => { if ((action === "start_over" || action === "delete") && !confirm(x.sure)) return; try { await api("/v1/account", { method: "POST", body: JSON.stringify({ action }) }); if (action === "start_over" || action === "delete") { localStorage.removeItem("awl.token"); S.token = null; return openAnon(); } settings(); } catch (e) { S.err = String(e.message); settings(); } };
@@ -216,9 +254,9 @@ async function settings() {
 
 function bind() {
   app.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => go(b.dataset.go));
-  app.querySelectorAll("[data-lang]").forEach((b) => b.onclick = () => { setLang(b.dataset.lang); S.token ? go("day") : unreachable(); });
+  app.querySelectorAll("[data-lang]").forEach((b) => b.onclick = () => { setLang(b.dataset.lang); if (!S.token) return unreachable(); go(["day", "week", "notebook", "settings"].includes(S.screen) ? S.screen : "day"); });
 }
-function go(s) { S.err = null; ({ day, week, notebook, settings })[s](); }
+function go(s) { S.err = null; S.screen = s; ({ day, week, notebook, settings })[s](); }
 S.token ? go("day") : openAnon();
 if (!NATIVE && "serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 
@@ -243,6 +281,13 @@ function nextSlots(from, count) {
     }
   }
   return out;
+}
+
+// What the server can actually serve: circles with articles, languages with content.
+async function flags() {
+  if (FLAGS) return FLAGS;
+  try { FLAGS = await api(`/v1/flags?lang=${S.lang}`); } catch { FLAGS = { circles: [], langs: [] }; }
+  return FLAGS;
 }
 
 let QUOTES = null;
