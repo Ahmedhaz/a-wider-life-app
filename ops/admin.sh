@@ -3,6 +3,7 @@
 #   ops/admin.sh content content/ar/self/01.json     upsert one content unit (article + five pulses)
 #   ops/admin.sh batch 5 ar test-1                   mint 5 print codes for lang ar under batch name test-1 (CSV to ops/out/)
 #   ops/admin.sh metric                              the one metric: drops that returned within two acting days
+#   ops/admin.sh funnel                              opened, entered, sheet done, acted once, reached week 2
 #   ops/admin.sh close                               run the day-close job now (what the hourly cron does)
 # The secret comes from AWL_ADMIN_SECRET, or is asked for once without echo. It never lands in a file.
 # Every call prints the Worker's answer and the HTTP status, so a refusal names itself.
@@ -31,6 +32,8 @@ case "${1:-}" in
     if printf '%s\n' "$body" | tail -1 | grep -q 'HTTP 200'; then printf '%s\n' "$body" | sed '$d' > "$out"; echo "wrote $out"; fi ;;
   metric)
     call "$BASE/v1/admin/metric" ;;
+  funnel)
+    call "$BASE/v1/admin/funnel" ;;
   close)
     TMO=120 call -X POST "$BASE/v1/admin/close" ;;
   *)
