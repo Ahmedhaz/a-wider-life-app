@@ -472,13 +472,19 @@ async function adminFunnel(db: Db): Promise<Response> {
     db.select<{ user_id: string; answer: string }>("entries", `select=user_id,answer`),
     db.select<{ user_id: string; week_no: number }>("program_state", `select=user_id,week_no`),
   ]);
-  const opened = books.filter((b) => b.edition === "digital").length;   // an app opened = one anonymous copy
-  const entered = users.length;                                          // finished the three onboarding steps
-  const sheetDone = new Set(weeks.filter((w) => w.trait_id && w.anchor_text && w.act_full).map((w) => w.user_id)).size;
-  const acted = new Set(entries.filter((e) => e.answer === "done" || e.answer === "smaller").map((e) => e.user_id)).size;
-  const week2 = states.filter((s) => s.week_no >= 2).length;
+  // One cohort throughout, or the shares are nonsense: anonymous copies, and the readers who came from
+  // them. Counting every user against digital copies alone reported 100% entry completion.
+  const cohort = books.filter((b) => b.edition === "digital");
+  const opened = cohort.length;                                          // an app opened = one anonymous copy
+  const mine = new Set(cohort.map((b) => b.user_id).filter(Boolean) as string[]);
+  const entered = mine.size;                                             // finished the three onboarding steps
+  const sheetDone = new Set(weeks.filter((w) => mine.has(w.user_id) && w.trait_id && w.anchor_text && w.act_full).map((w) => w.user_id)).size;
+  const acted = new Set(entries.filter((e) => mine.has(e.user_id) && (e.answer === "done" || e.answer === "smaller")).map((e) => e.user_id)).size;
+  const week2 = states.filter((s) => mine.has(s.user_id) && s.week_no >= 2).length;
+  void users;
   const pct = (n: number) => (opened ? Math.round((n / opened) * 1000) / 10 : null);
   return json({
+    cohort: "digital copies", total_users_all_editions: users.length,
     steps: [
       { step: "opened_app", n: opened, of_opened: 100 },
       { step: "finished_entry", n: entered, of_opened: pct(entered) },
