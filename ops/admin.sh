@@ -5,12 +5,18 @@
 #   ops/admin.sh metric                              the one metric: drops that returned within two acting days
 #   ops/admin.sh funnel                              opened, entered, sheet done, acted once, reached week 2
 #   ops/admin.sh close                               run the day-close job now (what the hourly cron does)
-# The secret comes from AWL_ADMIN_SECRET, or is asked for once without echo. It never lands in a file.
+# The secret comes from AWL_ADMIN_SECRET, then ~/.awl-admin-secret, then a prompt without echo.
+# Setting it: `openssl rand -base64 24 | tr -d '\n' > ~/.awl-admin-secret` then
+# `wrangler secret put ADMIN_SECRET < ~/.awl-admin-secret` -- via stdin, never the prompt, which
+# accepts an empty value and silently disables every admin route with a 404.
 # Every call prints the Worker's answer and the HTTP status, so a refusal names itself.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BASE="${AWL_BASE_URL:-$(cat "$ROOT/worker/.deployed-url" 2>/dev/null || true)}"
 [ -n "$BASE" ] || { echo "no base URL: run ops/ship.sh once, or set AWL_BASE_URL"; exit 4; }
+# A file beats a prompt: some terminals never deliver input to `read -s`, and an empty answer here is
+# indistinguishable from a real one until the Worker answers 404. ~/.awl-admin-secret is the usual home.
+if [ -z "${AWL_ADMIN_SECRET:-}" ] && [ -r "$HOME/.awl-admin-secret" ]; then AWL_ADMIN_SECRET="$(cat "$HOME/.awl-admin-secret")"; fi
 if [ -z "${AWL_ADMIN_SECRET:-}" ]; then read -r -s -p "ADMIN_SECRET (typing is hidden, press Enter after pasting): " AWL_ADMIN_SECRET; echo; fi
 AWL_ADMIN_SECRET="$(printf '%s' "$AWL_ADMIN_SECRET" | tr -d '[:space:]')"
 [ -n "$AWL_ADMIN_SECRET" ] || { echo "empty secret"; exit 5; }
