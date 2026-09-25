@@ -3,60 +3,159 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F7F4ED">
+<meta name="theme-color" content="#FAF7F0">
 <title>حياة أوسع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="64x64" href="/icons/icon-64.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="حياة أوسع">
 <style>
-:root{--bg:#FBF9F4;--paper:#fff;--ink:#1C2B2E;--muted:#5B6E71;--teal:#0E4A54;--gold:#C9A961;--sand:#E7DDCB;--line:#E3DAC7;--soft:#F1ECDF;--pen:#1B3A5C;--shade:#EAE3D3}
+/* Type. Amiri is a naskh revival and carries the voice; IBM Plex Sans Arabic carries the interface.
+   Both ship Arabic and Latin, so the two languages sit on the same rhythm. font-display:swap means
+   the app is readable in system type before they land, and never blocks on the network. */
+:root{
+  --bg:#FAF7F0;--paper:#FFFDF8;--ink:#16262A;--muted:#6B7C7F;
+  --teal:#0E4A54;--teal-deep:#0A363D;--gold:#C9A961;--gold-soft:#E8D9B5;
+  --sand:#E7DDCB;--line:#E8DFCE;--soft:#F3EEE2;--shade:#EBE4D4;--pen:#1B3A5C;
+  --sh-1:0 1px 2px rgba(22,38,42,.04),0 2px 10px rgba(22,38,42,.045);
+  --sh-2:0 2px 4px rgba(22,38,42,.05),0 10px 28px rgba(22,38,42,.07);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --serif:"Amiri",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.55;height:100%}
+html,body{margin:0;color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;height:100%;
+  background:var(--bg);
+  /* A page, lit slightly from above, rather than a flat fill. */
+  background-image:radial-gradient(120% 60% at 50% 0%,#FFFCF5 0%,rgba(255,252,245,0) 60%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 #app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
-.top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 10px}
-.top .t{font-weight:600;color:var(--teal)}.top .w{font-size:12px;color:var(--muted)}
-.body{flex:1;padding:14px 20px 20px;display:flex;flex-direction:column;gap:12px}
-.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding:8px 8px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--bg);position:sticky;bottom:0}
-.nav button{font:inherit;font-size:11px;background:none;border:0;color:var(--muted);padding:6px 0;cursor:pointer}
+
+/* ---- motion. One gesture, used everywhere: things arrive by rising a little and fading in.
+   Short and staggered, so a screen settles rather than performs. Anyone who has asked their
+   system for less motion gets none of it. ---- */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.top{animation:fade .3s var(--ease) both}
+.body>*{animation:rise .34s var(--ease) both}
+.body>*:nth-child(1){animation-delay:.02s}
+.body>*:nth-child(2){animation-delay:.05s}
+.body>*:nth-child(3){animation-delay:.08s}
+.body>*:nth-child(4){animation-delay:.11s}
+.body>*:nth-child(5){animation-delay:.14s}
+.body>*:nth-child(n+6){animation-delay:.16s}
+.nav{animation:fade .4s var(--ease) both}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ---- chrome ---- */
+.top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 18px) 22px 12px;
+  background:linear-gradient(to bottom,rgba(255,253,248,.9),rgba(255,253,248,0))}
+.top .t{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--teal);letter-spacing:.01em}
+.top .w{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.body{flex:1;padding:18px 22px 24px;display:flex;flex-direction:column;gap:14px}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);
+  padding:10px 8px calc(env(safe-area-inset-bottom,0px) + 12px);position:sticky;bottom:0;
+  background:rgba(250,247,240,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.nav button{font:inherit;font-size:11px;letter-spacing:.03em;background:none;border:0;color:var(--muted);
+  padding:7px 0;cursor:pointer;position:relative;transition:color .2s var(--ease)}
 .nav button.on{color:var(--teal);font-weight:600}
-.btn{font:inherit;border:1.5px solid var(--teal);color:var(--teal);background:var(--paper);border-radius:10px;padding:12px;text-align:center;font-weight:600;cursor:pointer;width:100%}
-.btn.fill{background:var(--teal);color:#fff}
-.btn.q{border-color:var(--line);color:var(--ink);font-weight:500;text-align:right}
-.btn[disabled]{opacity:.45}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hint{font-size:12px;color:var(--muted)}
-.lab{font-size:12px;font-weight:600;color:var(--teal)}
-.input{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:var(--paper);color:var(--ink)}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--paper);cursor:pointer}
-.chip.on{border-color:var(--teal);color:var(--teal);font-weight:600;background:var(--soft)}
-.brand{font-size:32px;color:var(--teal);text-align:center;margin-top:30px;font-weight:600}
-video{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#000}
-.k{font-size:11px;font-weight:600;color:var(--gold)}
-.obs{font-size:17px}.act{font-size:21px;font-weight:700;color:var(--teal);line-height:1.35}
-.dose{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
-.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.strip div{border:1px solid var(--sand);border-radius:5px;padding:5px 2px;text-align:center;font-size:10px;color:var(--muted);min-height:48px}
-.strip .n{font-weight:600;color:var(--teal);display:block;margin-bottom:3px}
-.strip .o{background:var(--shade)}.strip .m{color:var(--pen);font-weight:600}
-.shade{flex:1;background:var(--shade);border-radius:16px;min-height:300px}
-.count{font-size:20px;color:var(--teal);font-weight:700;text-align:center}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.grid div{aspect-ratio:1;border:1px solid var(--sand);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--pen)}
-.grid .o{background:var(--shade);border-color:var(--shade)}
-.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
-.row span:last-child{color:var(--muted)}
-.res{font-size:12px;color:var(--teal);text-align:center;text-decoration:underline;margin-top:8px}
-.err{color:#8A3B2E;font-size:13px}
-textarea.input{resize:none;height:44px}
-.skel{height:16px;border-radius:6px;background:linear-gradient(90deg,var(--soft),var(--shade),var(--soft));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite}
-@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--teal);border-radius:10px;overflow:hidden}
-.seg button{font:inherit;font-weight:600;padding:11px;border:0;background:var(--paper);color:var(--teal);cursor:pointer}
-.seg button.on{background:var(--teal);color:#fff}
+/* A hairline of gold under the tab you are on, drawn rather than blinked into place. */
+.nav button::after{content:"";position:absolute;left:50%;bottom:0;height:2px;width:0;border-radius:2px;
+  background:var(--gold);transform:translateX(-50%);transition:width .28s var(--ease)}
+.nav button.on::after{width:20px}
+
+/* ---- controls ---- */
+.btn{font:inherit;font-weight:600;border:1px solid var(--sand);color:var(--teal);background:var(--paper);
+  border-radius:14px;padding:14px;text-align:center;width:100%;cursor:pointer;box-shadow:var(--sh-1);
+  transition:transform .16s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease)}
+.btn:hover{border-color:var(--gold-soft);box-shadow:var(--sh-2)}
+.btn:active{transform:scale(.985);box-shadow:var(--sh-1)}
+.btn.fill{background:linear-gradient(180deg,var(--teal) 0%,var(--teal-deep) 100%);color:#FFFDF8;border-color:transparent;
+  box-shadow:0 2px 6px rgba(14,74,84,.18),0 10px 26px rgba(14,74,84,.16)}
+.btn.fill:hover{box-shadow:0 3px 8px rgba(14,74,84,.22),0 14px 32px rgba(14,74,84,.2)}
+.btn.q{border-color:var(--line);color:var(--ink);font-weight:500;text-align:right;box-shadow:none}
+.btn.q:hover{border-color:var(--gold-soft);background:var(--soft)}
+.btn[disabled]{opacity:.45;box-shadow:none;transform:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+  background:var(--paper);cursor:pointer;color:var(--ink);
+  transition:border-color .2s var(--ease),background .2s var(--ease),color .2s var(--ease),transform .16s var(--ease)}
+.chip:active{transform:scale(.96)}
+.chip.on{border-color:var(--teal);color:var(--teal);font-weight:600;background:var(--soft);
+  box-shadow:inset 0 0 0 1px rgba(14,74,84,.12)}
+
+.input{font:inherit;border:1px solid var(--line);border-radius:12px;padding:13px 14px;width:100%;
+  background:var(--paper);color:var(--ink);box-shadow:inset 0 1px 2px rgba(22,38,42,.03);
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+.input:focus{outline:0;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,74,84,.09)}
 select.input{appearance:none}
+textarea.input{resize:none;height:46px}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--sand);border-radius:12px;
+  overflow:hidden;box-shadow:var(--sh-1)}
+.seg button{font:inherit;font-weight:600;padding:12px;border:0;background:var(--paper);color:var(--teal);
+  cursor:pointer;transition:background .22s var(--ease),color .22s var(--ease)}
+.seg button.on{background:linear-gradient(180deg,var(--teal) 0%,var(--teal-deep) 100%);color:#FFFDF8}
+
+/* ---- voice ---- */
+.brand{font-family:var(--serif);font-size:40px;font-weight:700;color:var(--teal);text-align:center;
+  margin-top:36px;letter-spacing:.01em;line-height:1.25}
+.act{font-family:var(--serif);font-size:25px;font-weight:700;color:var(--teal);line-height:1.5;letter-spacing:.005em}
+.obs{font-size:17.5px;line-height:1.75}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.6}
+.lab{font-size:11.5px;font-weight:600;color:var(--gold);letter-spacing:.09em;text-transform:uppercase}
+.k{font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.09em;text-transform:uppercase}
+.dose{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;
+  padding:3px 11px;color:var(--muted);background:var(--paper)}
+.count{font-family:var(--serif);font-size:27px;color:var(--teal);font-weight:700;text-align:center;letter-spacing:.01em}
+.err{color:#8A3B2E;font-size:13px;background:rgba(138,59,46,.06);border:1px solid rgba(138,59,46,.14);
+  border-radius:10px;padding:10px 12px}
+.res{font-size:12px;color:var(--teal);text-align:center;text-decoration:underline;
+  text-underline-offset:3px;margin-top:10px;opacity:.85}
+details summary{cursor:pointer}
+details[open] summary{margin-bottom:8px}
+
+/* ---- the week strip and the notebook grid ---- */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.strip div{border:1px solid var(--line);border-radius:9px;padding:7px 2px;text-align:center;font-size:10px;
+  color:var(--muted);min-height:54px;background:var(--paper);box-shadow:var(--sh-1);
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+.strip .n{font-weight:600;color:var(--teal);display:block;margin-bottom:4px;font-size:11px}
+.strip .o{background:linear-gradient(160deg,var(--shade),var(--sand));border-color:var(--sand)}
+.strip .m{color:var(--pen);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.grid div{aspect-ratio:1;border:1px solid var(--line);border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:12px;color:var(--pen);background:var(--paper)}
+.grid .o{background:linear-gradient(160deg,var(--shade),var(--sand));border-color:var(--sand)}
+
+/* The open day: nothing is asked, so the screen holds a quiet panel instead of content. */
+.shade{flex:1;min-height:320px;border-radius:22px;border:1px solid var(--line);box-shadow:var(--sh-1);
+  background:linear-gradient(165deg,var(--soft) 0%,var(--shade) 55%,var(--sand) 100%)}
+
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;
+  border-bottom:1px solid var(--line);font-size:14px}
+.row span:last-child{color:var(--muted)}
+
+/* Arabic is a connected script: tracking pulls the joins apart and the word stops reading as a word.
+   Latin keeps the tracking, Arabic gets none. setLang() sets html[lang], so this follows the reader. */
+html[lang="ar"] .lab,html[lang="ar"] .k,html[lang="ar"] .top .t,html[lang="ar"] .top .w,
+html[lang="ar"] .brand,html[lang="ar"] .act,html[lang="ar"] .count,html[lang="ar"] .nav button,
+html[lang="ar"] .obs,html[lang="ar"] .dose{letter-spacing:0}
+
+/* Loading. The shimmer is the one place motion is allowed to loop. */
+.skel{height:17px;border-radius:8px;background:linear-gradient(90deg,var(--soft),var(--shade),var(--soft));
+  background-size:200% 100%;animation:sk 1.3s ease-in-out infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
