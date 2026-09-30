@@ -33,7 +33,18 @@ uploads it as the `turath2026-debug-apk` artifact. You can also run it by hand f
 `npx cap open android`, or `cd android && ./gradlew assembleDebug`. A Play Store release still needs an upload
 keystore (`./gradlew bundleRelease` with signing configured). No keystore is in this repo.
 
-**iOS.** Same Mac steps and scars as `../mobile/README.md`. In short:
+**iOS → TestFlight, from CI (no Mac needed).** `.github/workflows/turath-testflight.yml` builds on a GitHub macOS
+runner, signs with Xcode cloud signing and uploads to App Store Connect. The build number is the run number.
+Once, before the first run:
+1. App Store Connect → Apps → **+** → New App, bundle id `com.turath2026.app`, name Turath2026. If the bundle id
+   is not in the list, register it under Certificates, Identifiers & Profiles → Identifiers.
+2. App Store Connect → Users and Access → Integrations → App Store Connect API → generate a key with the
+   **Admin** role, then add repo secrets `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8` (the whole .p8 file).
+
+Then push a tag from any branch (`git tag turath-ios-1.0 && git push origin turath-ios-1.0`), or use
+Actions → Turath2026 · TestFlight → Run workflow once the file is on `main`.
+
+**iOS, by hand on a Mac.** Same Mac steps and scars as `../mobile/README.md`. In short:
 ```
 brew install cocoapods
 cd turath && npm install && LANG=en_US.UTF-8 npm run sync

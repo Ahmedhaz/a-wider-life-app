@@ -1,0 +1,107 @@
+name: Turath2026 · TestFlight
+
+# Builds the Turath2026 iOS app from the current turath-2026 site on a macOS runner, signs it with
+# Xcode's cloud-managed signing, and uploads it to App Store Connect, where it lands in TestFlight.
+# Every run is a real upload, so it never runs on an ordinary push: run it by hand (Actions →
+# Turath2026 · TestFlight → Run workflow, once this file is on main), or push a tag from any branch:
+#   git tag turath-ios-1.0 && git push origin turath-ios-1.0   (the tag names the marketing version)
+#
+# Needs three repository secrets (Settings → Secrets and variables → Actions), from an App Store
+# Connect API key with the Admin role (cloud signing needs Admin to create the distribution cert):
+#   ASC_KEY_ID      the key's ID, e.g. 2X9R4HXF34
+#   ASC_ISSUER_ID   the issuer ID shown above the keys list
+#   ASC_KEY_P8      the full contents of AuthKey_<ID>.p8, including the BEGIN/END lines
+# And an app record for com.turath2026.app in App Store Connect (the API cannot create one).
+on:
+  push:
+    tags: ["turath-ios-*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version (the build number is the run number)"
+        default: "1.0"
+        required: true
+
+jobs:
+  upload:
+    name: Build, archive, upload to TestFlight
+    runs-on: macos-latest
+    env:
+      LANG: en_US.UTF-8   # CocoaPods dies on the Arabic paths without it (see mobile/README.md)
+      LC_ALL: en_US.UTF-8
+    defaults:
+      run:
+        working-directory: turath
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: turath/package-lock.json
+      - name: Version
+        env:
+          INPUT: ${{ inputs.version }}
+          REF: ${{ github.ref_name }}
+        run: |
+          v="${INPUT:-${REF#turath-ios-}}"
+          [[ "$v" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || v=1.0
+          echo "VERSION=$v" >> "$GITHUB_ENV"
+          echo "Uploading $v (${{ github.run_number }})"
+      - name: Secrets present
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            [ -n "${!v}" ] || { echo "::error::Missing repository secret $v"; exit 1; }
+          done
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s\n' "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+      - run: npm ci
+      - name: Build www/ from the site
+        run: npm run build
+      - name: Every link in the bundle resolves
+        run: npm run check
+      - name: cap sync ios (copies www/, runs pod install)
+        run: ./node_modules/.bin/cap sync ios
+      - name: Archive
+        working-directory: turath/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Turath2026.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} \
+            MARKETING_VERSION=$VERSION CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            archive
+      - name: Export and upload to App Store Connect
+        working-directory: turath/ios/App
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>M3RPNM736H</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>testFlightInternalTestingOnly</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Turath2026.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/out" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+            -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
+          echo "Uploaded $VERSION (${{ github.run_number }}). It appears in TestFlight once Apple finishes processing, usually 5 to 30 minutes."
+      - name: Remove the key
+        if: always()
+        run: rm -rf ~/.appstoreconnect
