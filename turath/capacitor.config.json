@@ -1,0 +1,17 @@
+{
+  "appId": "com.turath2026.app",
+  "appName": "Turath2026",
+  "webDir": "www",
+  "backgroundColor": "#F5EFE3",
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#F5EFE3"
+  },
+  "android": {
+    "backgroundColor": "#F5EFE3",
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "StatusBar": { "overlaysWebView": false, "style": "LIGHT", "backgroundColor": "#F5EFE3" }
+  }
+}

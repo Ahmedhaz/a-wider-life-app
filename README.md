@@ -13,6 +13,7 @@ and the technical document on claude.ai (A Wider Life · App Technical Document 
 | `worker/` | Cloudflare Worker (TypeScript): the engine (`src/engine.ts`, pure), the API (`src/index.ts`), Postgres access (`src/db.ts`), copy codes (`src/codes.ts`), country resources (`src/countries.ts`). Tests in `test/`. |
 | `web/` | The client: one installable page that renders what the Worker returns and computes no rule. |
 | `content/` | One JSON unit per article and week: `content/<lang>/<arc>/<week>.json`. `node content/validate.mjs` refuses incomplete units. |
+| `turath/` | Turath2026: the [turath-2026](https://github.com/Ahmedhaz/turath-2026) site bundled offline into iOS and Android shells. See `turath/README.md`. |
 | `ops/` | `ship.sh` (the one deploy path, closed by the live build marker), `probe.sh` (honest-ceiling probes), `supabase/migrations/`. |
 
 ## Run

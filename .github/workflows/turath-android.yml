@@ -1,0 +1,41 @@
+name: Turath2026 · Android
+
+# Builds the Turath2026 app from the current turath-2026 site and uploads an installable debug APK.
+# Run it by hand (Actions → Turath2026 · Android → Run workflow) after the site changes, or let it
+# run on any push that touches turath/. No secrets: the APK is debug-signed, for sideloading and testing.
+on:
+  push:
+    paths: ["turath/**", ".github/workflows/turath-android.yml"]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    name: Build www, check links, assemble APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: turath
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: turath/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - name: Build www/ from the site
+        run: npm run build
+      - name: Every link in the bundle resolves
+        run: npm run check
+      - run: ./node_modules/.bin/cap sync android
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: turath/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: turath2026-debug-apk
+          path: turath/android/app/build/outputs/apk/debug/app-debug.apk
